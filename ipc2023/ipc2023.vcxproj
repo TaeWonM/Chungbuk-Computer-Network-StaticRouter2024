@@ -190,6 +190,7 @@
     <ClInclude Include="ArpLayer.h" />
     <ClInclude Include="BaseLayer.h" />
     <ClInclude Include="Cipc2023SubDlg.h" />
+    <ClInclude Include="Cipc2023SubDlg1.h" />
     <ClInclude Include="CNILayer.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ipc2023.h" />
@@ -206,6 +207,7 @@
     <ClCompile Include="ArpLayer.cpp" />
     <ClCompile Include="BaseLayer.cpp" />
     <ClCompile Include="Cipc2023SubDlg.cpp" />
+    <ClCompile Include="Cipc2023SubDlg1.cpp" />
     <ClCompile Include="EthernetLayer.cpp" />
     <ClCompile Include="CNIlayer.cpp" />
     <ClCompile Include="ipc2023.cpp" />

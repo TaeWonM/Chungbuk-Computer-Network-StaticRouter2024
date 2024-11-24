@@ -101,9 +101,10 @@ public:
 	/////////////////////////////
 	CString m_stMessage;
 	CComboBox m_Combobox;
-	CListCtrl m_ListControl;
+	CComboBox m_Combobox2;
 	CListCtrl m_ProxyListControl;
 	CIPAddressCtrl m_SrcIp;
+	CIPAddressCtrl m_SrcIp2;
 	CIPAddressCtrl m_DstIp;
 	Cipc2023SubDlg * ProxyDlg;
 	int timerIndex[101];
@@ -112,6 +113,7 @@ public:
 	//////////////////////////////////////
 	///////////오늘 추가된 부분//////////
 	void SetComboboxlist();
+	void SetComboboxlist2();
 	// 콤보박스의 값을 처리하는 함수가 이동되서 추가된 함수
 	////////////////////////////////////
 private:
@@ -132,4 +134,13 @@ public:
 	afx_msg void OnBnClickedProxyItemAddBtn();
 	afx_msg void OnEnChangeEditGarp();
 	afx_msg void OnBnClickedGarpButtonSend();
+	afx_msg void OnCbnSelchangeCombo2();
+	afx_msg void OnEnChangeEditSrc();
+	afx_msg void OnEnChangeEditSrc3();
+	afx_msg void OnIpnFieldchangedSrcIp(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnIpnFieldchangedSrcIp2(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedButtonUnaddr();
+	afx_msg void OnBnClickedIpRoutingTableItemAddBtn();
+	CListCtrl m_RoutingTableList; // 리스트 컨트롤
+
 };
