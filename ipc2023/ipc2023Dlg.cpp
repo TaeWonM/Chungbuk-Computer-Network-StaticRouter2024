@@ -14,9 +14,10 @@
 #include <afxdlgs.h> //안에 포함된 CFileDialog사용하기 위해 추가
 //////////////////////////////////////
 
-#define LIST_CONTROLL_IP_COLUMN 1 
+#define LIST_CONTROL_IP_COLUMN 1 
 #define LIST_CONTROLL_MAC_COLUMN 2 
-#define LIST_CONTROLL_STATUS_COLUMN 3
+#define LIST_CONTROL_INTERFACE_COLUMN 3
+#define LIST_CONTROLL_STATUS_COLUMN 4
 
 
 #ifdef _DEBUG
@@ -124,12 +125,15 @@ void Cipc2023Dlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_EDIT_SRC, m_unSrcAddr);
+	DDX_Text(pDX, IDC_EDIT_SRC3, m_unSrcAddr2);
 	////////////////////새로 추가/////////////////
-	DDX_Control(pDX, IDC_COMBO1, m_Combobox);
-	DDX_Control(pDX, IDC_LIST2, m_ListControl);
-	DDX_Control(pDX, IDC_LIST3, m_ProxyListControl);
-	DDX_Control(pDX, IDC_DST_IP, m_DstIp);
-	DDX_Control(pDX, IDC_SRC_IP, m_SrcIp);
+	DDX_Control(pDX, IDC_LIST_ARP_CACHE, m_ArpListControl);
+	DDX_Control(pDX, IDC_LIST_PROCY, m_ProxyListControl);
+	DDX_Control(pDX, IDC_LIST_IP_ROUTING, m_RoutingListControl);
+	DDX_Control(pDX, IDC_SRC_IP2, m_SrcIp2);
+	DDX_Control(pDX, IDC_COMBO2, m_Combobox2);
+	DDX_Control(pDX, IDC_SRC_IP, m_SrcIp1);
+	DDX_Control(pDX, IDC_COMBO1, m_Combobox1);
 	// 현재 장치의 네트워크 장치를 보여줄 콤보박스 추가함
 	// 여러 네트워크 장치를 보여주기 위해 콤보박스 채용
 }
@@ -141,8 +145,6 @@ BEGIN_MESSAGE_MAP(Cipc2023Dlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_ADDR, &Cipc2023Dlg::OnBnClickedButtonAddr)
-	// 주소 설정 버튼 클릭 처리기 등록
-	ON_BN_CLICKED(IDC_BUTTON_SEND, &Cipc2023Dlg::OnBnClickedButtonSend)
 	// 메세지 전송 버튼 클릭 처리기 등록
 	ON_WM_TIMER() // 메세지 타이머 처리기 등록
 
@@ -151,13 +153,11 @@ BEGIN_MESSAGE_MAP(Cipc2023Dlg, CDialogEx)
 	// 소스 주소 변경 시 처리기 등록
 	ON_CBN_SELCHANGE(IDC_COMBO1, &Cipc2023Dlg::OnCbnSelchangeCombo1)
 	ON_BN_CLICKED(IDC_ITEM_DELETE_BTN, &Cipc2023Dlg::OnBnClickedItemDeleteBtn)
-	ON_BN_CLICKED(IDC_ALL_DELETE_BTN, &Cipc2023Dlg::OnBnClickedAllDeleteBtn)
-	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST2, &Cipc2023Dlg::OnLvnItemchangedList2)
-	ON_NOTIFY(IPN_FIELDCHANGED, IDC_DST_IP, &Cipc2023Dlg::OnIpnFieldchangedDstIp)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_ARP_CACHE, &Cipc2023Dlg::OnLvnItemchangedList2)
 	ON_BN_CLICKED(IDC_PROXY_ITEM_ADD_BTN, &Cipc2023Dlg::OnBnClickedProxyItemAddBtn)
 	ON_BN_CLICKED(IDC_PROXY_DELETE_BTN, &Cipc2023Dlg::OnBnClickedProxyDeleteBtn)
-	ON_EN_CHANGE(IDC_EDIT_GARP, &Cipc2023Dlg::OnEnChangeEditGarp)
-	ON_BN_CLICKED(IDC_GARP_BUTTON_SEND, &Cipc2023Dlg::OnBnClickedGarpButtonSend)
+	ON_CBN_SELCHANGE(IDC_COMBO2, &Cipc2023Dlg::OnCbnSelchangeCombo2)
+	ON_BN_CLICKED(IDC_IP_ROUTING_TABLE_ITEM_ADD_BTN, &Cipc2023Dlg::OnBnClickedIpRoutingTableItemAddBtn)
 END_MESSAGE_MAP()
 
 
@@ -205,6 +205,7 @@ BOOL Cipc2023Dlg::OnInitDialog()
 	SetComboboxlist();
 	InitListControlSet();
 	InitProxyListControlSet();
+	InitRoutingListControlSet();
 	memset(timerIndex, -1, 4 * 10);
 	//원래는 여기서 송수신 주소 처리했는데 NI레이어로 함수 이동하고 여기서는 전달만 해줌
 	/////////////////////////////////////////////////////////////////////////
@@ -217,7 +218,8 @@ void Cipc2023Dlg::SetComboboxlist() {
 	int max = m_NILayer->GetMaxAdapterIndex();
 	for (int i = 0; i < max; i++) {
 		pcap_if_t* d = m_NILayer->GetAdapter(i);
-		m_Combobox.AddString(_T(d->description));
+		m_Combobox1.AddString(_T(d->description));
+		m_Combobox2.AddString(_T(d->description));
 	}
 }
 //원래는 여기서 송수신 주소 처리했는데 NI레이어로 함수 이동하고 여기서는 전달만 해줌
@@ -279,71 +281,15 @@ HCURSOR Cipc2023Dlg::OnQueryDragIcon()
 
 
 
-
-void Cipc2023Dlg::OnBnClickedButtonSend()
-{
-	UpdateData(TRUE); // 대화 상자의 컨트롤에서 데이터를 가져와 멤벼 변수에 등록
-	SendData();	// 데이터를 전송하는 함수의 멤버 변수 호촐
-	UpdateData(FALSE); // 멤벼 변수의 값을 대화 상자의 컨트롤에 등록
-}
-// send button 이 눌러졌을 때 작동하는 함수입니다.
-// 메시지가 존재 하였을 경우 타이머를 설정하고, 기존에 있던 메시지를 초기화합니다.
-// 또한, Send 신호를 브로드캐스트로 알립니다.
-
-
-void Cipc2023Dlg::SendData()
-{
-	CString unDstIpAddrStr; // 메세지 헤더를 저장할 문자열 변수 선언
-	unsigned char Ip1, Ip2, Ip3, Ip4;
-	m_DstIp.GetAddress(Ip1, Ip2, Ip3, Ip4);
-	unsigned char unDst_Ip_Address[] = { Ip1, Ip2, Ip3, Ip4 };
-	unDstIpAddrStr.Format(_T("%d.%d.%d.%d"), unDst_Ip_Address[0], unDst_Ip_Address[1], unDst_Ip_Address[2], unDst_Ip_Address[3]);
-	if (Ip1 == 0 && Ip2 == 0 && Ip3 == 0 && Ip4 == 0) {
-		AfxMessageBox("No Address Set..");
-		return;
-	}
-	else {
-		int i = 0;
-		for (i = 0; i < m_ListControl.GetItemCount(); i++) {
-			if (m_ListControl.GetItemText(i, LIST_CONTROLL_IP_COLUMN) == unDstIpAddrStr) {
-				if (m_ListControl.GetItemText(i, LIST_CONTROLL_STATUS_COLUMN) == "complete") {
-					int k;
-					for (k = 0; k < timerMaxIndex; k++) {
-						if (i == timerIndex[k]) break;
-					}
-					SetTimer(k, 30000, NULL);
-					AfxMessageBox(_T("Already Set.."));
-					return;
-				}
-				else {
-					m_Ip->Send(unDst_Ip_Address, 4);
-					return;
-				}
-			}
-		}
-		m_ListControl.InsertItem(i, "");
-		m_ListControl.SetItemText(i, LIST_CONTROLL_IP_COLUMN, unDstIpAddrStr);
-		m_ListControl.SetItemText(i, LIST_CONTROLL_STATUS_COLUMN, _T("Incomplete"));
-		SetTimer(i, 3000, NULL);
-		timerIndex[i] = i;
-		timerMaxIndex++;
-		m_Ip->Send(unDst_Ip_Address, 4);
-	}
-}
-// Send 버튼이 눌리면 다음의 함수를 실행합니다.
-// 일단 m_unDstAddr가 ff(즉, 브로딩캐스트 Addr)인지 확인을 하고, 확인되면 m_unSrcAddr와 함께 수신자의 chatDlg에 나타날 문자를 MsgHeader에 포멧팅합니다.
-// m_unDstAddr가 ff(즉, 브로딩캐스트 Addr)가 아니면 기존의 m_unSrcAddr과 m_unDstAddr를 이용하여 수신자의 chatDlg에 나타날 문자를 MsgHeader에 포멧팅합니다.
-// 그 후 메시지를 저장하고, Dlg계층의 하위 계층인 ChatAppLayer의 Send함수로 넘겨줍니다.
-
 BOOL Cipc2023Dlg::Receive(CString IpAddr, CString MacAddr, BOOL is_In)
 {
 	/////////////////////////////////수정됨//////////////////////////////////////////
 	if (is_In) {
 		int i = 0;
-		for (i = 0; i < m_ListControl.GetItemCount(); i++) {
-			if (m_ListControl.GetItemText(i, LIST_CONTROLL_IP_COLUMN) == IpAddr) {
-				m_ListControl.SetItemText(i, LIST_CONTROLL_MAC_COLUMN, MacAddr);
-				m_ListControl.SetItemText(i, LIST_CONTROLL_STATUS_COLUMN, _T("complete"));
+		for (i = 0; i < m_ArpListControl.GetItemCount(); i++) {
+			if (m_ArpListControl.GetItemText(i, LIST_CONTROL_IP_COLUMN) == IpAddr) {
+				m_ArpListControl.SetItemText(i, LIST_CONTROLL_MAC_COLUMN, MacAddr);
+				m_ArpListControl.SetItemText(i, LIST_CONTROLL_STATUS_COLUMN, _T("complete"));
 				int k;
 				for (k = 0; k < timerMaxIndex; k++) {
 					if (i == timerIndex[k]) break;
@@ -354,11 +300,11 @@ BOOL Cipc2023Dlg::Receive(CString IpAddr, CString MacAddr, BOOL is_In)
 		return FALSE;
 	}
 	else {
-		int i = m_ListControl.GetItemCount();
-		m_ListControl.InsertItem(i, "");
-		m_ListControl.SetItemText(i, LIST_CONTROLL_IP_COLUMN, IpAddr);
-		m_ListControl.SetItemText(i, 2, MacAddr);
-		m_ListControl.SetItemText(i, LIST_CONTROLL_STATUS_COLUMN, _T("complete"));
+		int i = m_ArpListControl.GetItemCount();
+		m_ArpListControl.InsertItem(i, "");
+		m_ArpListControl.SetItemText(i, LIST_CONTROL_IP_COLUMN, IpAddr);
+		m_ArpListControl.SetItemText(i, 2, MacAddr);
+		m_ArpListControl.SetItemText(i, LIST_CONTROLL_STATUS_COLUMN, _T("complete"));
 		for (int k = 0; k < timerMaxIndex; k++) {
 			if (timerIndex[k] <= -1) {
 				SetTimer(k, 30000, NULL);
@@ -385,8 +331,7 @@ BOOL Cipc2023Dlg::PreTranslateMessage(MSG* pMsg)
 		switch (pMsg->wParam)
 		{
 		case VK_RETURN:
-			if (::GetDlgCtrlID(::GetFocus()) == IDC_EDIT3)
-				OnBnClickedButtonSend();
+			//if (::GetDlgCtrlID(::GetFocus()) == IDC_EDIT3)
 			// 현재 포커스가 IDC_EDIT3 인지 확인하고 맞다면, Send버튼 처리 함수인 OnBnClickedButtonSend() 호출
 			return FALSE;
 		case VK_ESCAPE: return FALSE;
@@ -405,33 +350,22 @@ void Cipc2023Dlg::SetDlgState(int state)
 	UpdateData(TRUE);
 
 	// 각 UI 요소에 대한 포인터 가져옴
-	CButton* pChkButton = (CButton*)GetDlgItem(IDC_CHECK1);
-
 	CButton* pSendButton = (CButton*)GetDlgItem(bt_send);
 	CButton* pSetAddrButton = (CButton*)GetDlgItem(bt_setting);
 	CButton* pitemDeleteButton = (CButton*)GetDlgItem(IDC_ITEM_DELETE_BTN);
-	CButton* pallDeleteButton = (CButton*)GetDlgItem(IDC_ALL_DELETE_BTN);
 	///////////////////////////////////////////////////////////
 	// 상태에 따른 UI 요소 설정값 변경
 	switch (state)
 	{
 	case IPC_INITIALIZING: // 초기화 상태, 추가한 버튼 3개 다 처음엔 비활성
-		pSendButton->EnableWindow(FALSE);
-		m_ListControl.EnableWindow(TRUE);
+		m_ArpListControl.EnableWindow(TRUE);
 		////////여기서 삭제 버튼 두개 다 비활성, 목적지 입력 비활성
-		m_DstIp.EnableWindow(FALSE);
 		pitemDeleteButton->EnableWindow(FALSE);
-		pallDeleteButton->EnableWindow(FALSE);
 		/////////////////////////////초기에 GARP관련 비활성 상태로 되게 설정
-		GetDlgItem(IDC_EDIT_GARP)->EnableWindow(FALSE);
-		GetDlgItem(IDC_GARP_BUTTON_SEND)->EnableWindow(FALSE);
 		////////////////////////////////////////
 		break;
 	case IPC_READYTOSEND: // 전송 준비 상태, 추가한 버튼 중 파일선택 버튼이랑 주소 입력칸만 활성화
-		pSendButton->EnableWindow(TRUE);
-		m_ListControl.EnableWindow(TRUE);
-		GetDlgItem(IDC_EDIT_GARP)->EnableWindow(TRUE);
-		GetDlgItem(IDC_GARP_BUTTON_SEND)->EnableWindow(TRUE);
+		m_ArpListControl.EnableWindow(TRUE);
 		break;
 	case IPC_WAITFORACK:	break; // 수신 대기 상태
 	case IPC_ERROR:		break; // 에러 상태
@@ -444,33 +378,33 @@ void Cipc2023Dlg::SetDlgState(int state)
 	case IPC_ADDR_SET: // 주소 설정 상태
 		pSetAddrButton->SetWindowText(_T("재설정(&R)"));
 		//pChkButton->EnableWindow(FALSE)
-		m_Combobox.EnableWindow(FALSE);
+		m_Combobox1.EnableWindow(FALSE);
+		m_Combobox2.EnableWindow(FALSE);
 		////////////////오늘 변경됨//////////////////////
 		m_NILayer->Set_is_set(true);
-		m_SrcIp.EnableWindow(FALSE);
+		m_SrcIp1.EnableWindow(FALSE);
+		m_SrcIp2.EnableWindow(FALSE);
 		/////////////////////////////////////////////
 		// NI레이어의 Set_is_set true 로 설정 (추가됨)
 		if (!m_NILayer->Receive()) SetDlgState(IPC_ADDR_RESET);
 		// NI레이어의 receive가 false인 경우 SetDlgState(IPC_ADDR_RESET)을 진행
 		// 여기서 삭제 버튼 활성화, 상대 주소 입력되게 하기
-		m_DstIp.EnableWindow(TRUE);
 		pitemDeleteButton->EnableWindow(TRUE);
-		pallDeleteButton->EnableWindow(TRUE);
 		break;
 	case IPC_ADDR_RESET: // 주소 재설정 상태
 		pSetAddrButton->SetWindowText(_T("설정(&O)"));
-		m_Combobox.EnableWindow(TRUE);
+		m_Combobox1.EnableWindow(TRUE);
+		m_Combobox2.EnableWindow(TRUE);
 		// 네트워크 장치 콤보박스에 다시 접근할 수 있도록 설정
 		///////////////오늘 변경됨/////////////////////
 		m_NILayer->Set_is_set(false);
-		m_SrcIp.EnableWindow(TRUE);//재설정하면 소스 IP 입력할 수 있게 설정
+		m_SrcIp1.EnableWindow(TRUE);//재설정하면 소스 IP 입력할 수 있게 설정
+		m_SrcIp2.EnableWindow(TRUE);
 		// NI레이어의 Set_is_set false 로 설정 (추가됨)
 		/////////////////////////////////////////////
 		// is_set 플래그 false로 설정(추가됨)
 		// 기존 코드에서 브로드캐스트 체크박스 관련 코드 삭제
-		m_DstIp.EnableWindow(FALSE);
 		pitemDeleteButton->EnableWindow(FALSE);
-		pallDeleteButton->EnableWindow(FALSE);
 		// 다시 버튼 2개 비활성, 목적지 비활성, 내 ip 칸 활성
 		break;
 	}
@@ -495,8 +429,8 @@ void Cipc2023Dlg::OnTimer(UINT nIDEvent)
 	}
 	else {
 		KillTimer(nIDEvent);
-		m_Ip->RemoveItem(m_ListControl.GetItemText(timerIndex[nIDEvent], 1), m_ListControl.GetItemText(timerIndex[nIDEvent], 2));
-		m_ListControl.DeleteItem(timerIndex[nIDEvent]);
+		m_Ip->RemoveItem(m_ArpListControl.GetItemText(timerIndex[nIDEvent], 1), m_ArpListControl.GetItemText(timerIndex[nIDEvent], 2));
+		m_ArpListControl.DeleteItem(timerIndex[nIDEvent]);
 		timerIndex[nIDEvent] = -1;
 		for (int k = nIDEvent + 1; k < timerMaxIndex; k++) {
 			timerIndex[k]--;
@@ -534,9 +468,11 @@ void Cipc2023Dlg::OnBnClickedButtonAddr()
 		// MacAddr2HexInt함수의 소스 주소 또는 목적지 주소가 잘못 설정되어 
 		// nullptr을 반환한 경우 실행을 중단하도록 추가
 		m_EthernetLayer->SetSourceAddress(SrcAddr);
-		unsigned char IpAddress[4];
-		m_SrcIp.GetAddress(IpAddress[0], IpAddress[1], IpAddress[2], IpAddress[3]);
-		m_Arp->Set_Sender_Address(SrcAddr, IpAddress);
+		unsigned char IpAddress1[4];
+		unsigned char IpAddress2[4];
+		m_SrcIp1.GetAddress(IpAddress1[0], IpAddress1[1], IpAddress1[2], IpAddress1[3]);
+		m_SrcIp2.GetAddress(IpAddress2[0], IpAddress2[1], IpAddress2[2], IpAddress2[3]);
+		m_Arp->Set_Sender_Address(SrcAddr, IpAddress1);
 		// 이더넷 레이어에서 선언한 SetSourceAddress 함수를 가져와 사용하고 있음
 		// dlg 헤더 파일을 보면 m_EthernetLayer가 CEthernetLayer* 즉 포인터임을
 		// 확인 가능함
@@ -575,7 +511,7 @@ void Cipc2023Dlg::OnCbnSelchangeCombo1()
 
 
 	int i = 0;
-	int indexnum = m_Combobox.GetCurSel();	// 콤보 박스에서 선택한 네트워크 장치의 인덱스 가져오기
+	int indexnum = m_Combobox1.GetCurSel();	// 콤보 박스에서 선택한 네트워크 장치의 인덱스 가져오기
 	//오늘 변경된 부분///////////////////////////////////////////////////////
 	m_NILayer->SetCurAdapterIndex(indexnum);	// 현재 어뎁터의 인덱스 설정
 	if (pcap_lookupnet(m_NILayer->GetAdapter(indexnum)->name, &net, &mask, errbuf) < 0) {
@@ -599,6 +535,47 @@ void Cipc2023Dlg::OnCbnSelchangeCombo1()
 	SetDlgItemText(IDC_EDIT_SRC, Address_mssage); // 포멧된 MAC주소를 송신자 주소로 설정
 	PacketCloseAdapter(adapter); // 어뎁터 닫기
 }
+
+
+void Cipc2023Dlg::OnCbnSelchangeCombo2()
+{
+	bpf_u_int32 net, mask;	// 네트워크 주소와 마스크 주소 담을 변수 설정
+	char errbuf[101];	// 오류 메세지 담을 버퍼 설정
+	PPACKET_OID_DATA OidData;	// OID 데이터 담을 포인터 설정
+	LPADAPTER adapter = NULL;	// 어뎁터 포인터 설정
+
+	// OID 구조체 메모리 설정(추가됨)
+	OidData = (PPACKET_OID_DATA)malloc(6 + sizeof(PPACKET_OID_DATA));
+	OidData->Oid = OID_802_3_CURRENT_ADDRESS;	// OID 설정
+	OidData->Length = 6;	// OID 크기 길이 설정
+
+
+	int i = 0;
+	int indexnum = m_Combobox2.GetCurSel();	// 콤보 박스에서 선택한 네트워크 장치의 인덱스 가져오기
+	//오늘 변경된 부분///////////////////////////////////////////////////////
+	m_NILayer->SetCurAdapterIndex(indexnum);	// 현재 어뎁터의 인덱스 설정
+	if (pcap_lookupnet(m_NILayer->GetAdapter(indexnum)->name, &net, &mask, errbuf) < 0) {
+		return;
+		printf("error");
+	} // 현재 선택한 어뎁터의 네트워크 주소와 마스크 주소 조회
+	adapter = PacketOpenAdapter(m_NILayer->GetAdapter(indexnum)->name);
+	/////////////////// getter함수들로 변경됨 직접 참조 막아서 그럼////////////
+	if (!adapter || adapter->hFile == INVALID_HANDLE_VALUE) {
+		return;
+	}
+	// 어뎁터 열기 실패하면 함수 종료
+
+	PacketRequest(adapter, FALSE, OidData);// MAC 주소 가져오기
+
+	// MAC 주소를 문자열로 포멧
+	CString Address_mssage = "";
+	Address_mssage.Format(_T("%02x:%02x:%02x:%02x:%02x:%02x"),
+		OidData->Data[0], OidData->Data[1], OidData->Data[2],
+		OidData->Data[3], OidData->Data[4], OidData->Data[5]);
+	SetDlgItemText(IDC_EDIT_SRC3, Address_mssage); // 포멧된 MAC주소를 송신자 주소로 설정
+	PacketCloseAdapter(adapter); // 어뎁터 닫기
+}
+
 
 
 
@@ -653,15 +630,15 @@ unsigned char* Cipc2023Dlg::IpAddr2HexInt(CString Ip_address)
 void Cipc2023Dlg::InitListControlSet()
 {
 	CRect r;
-	::GetClientRect(m_ListControl.m_hWnd, r);
+	::GetClientRect(m_ArpListControl.m_hWnd, r);
 	int cx = r.right - r.left;
-	CString column[] = { "", "IP Address", "Ethernet Address", "Status" };
-	float nColWidth[] = { 0, 0.2, 0.5, 0.3 };
-	for (int i = 0; i < 4; i++) {
-		m_ListControl.InsertColumn(i, column[i], LVCFMT_CENTER, int(cx * nColWidth[i]));
+	CString column[] = { "", "IP Address", "Ethernet Address", "Interface", "Status"};
+	float nColWidth[] = { 0, 0.3, 0.3, 0.2, 0.2 };
+	for (int i = 0; i < 5; i++) {
+		m_ArpListControl.InsertColumn(i, column[i], LVCFMT_CENTER, int(cx * nColWidth[i]));
 	}
 
-	m_ListControl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+	m_ArpListControl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 }
 
 void Cipc2023Dlg::InitProxyListControlSet()
@@ -669,7 +646,7 @@ void Cipc2023Dlg::InitProxyListControlSet()
 	CRect r;
 	::GetClientRect(m_ProxyListControl.m_hWnd, r);
 	int cx = r.right - r.left;
-	CString column[] = { "", "Device ID", "IP Address", "Ethernet Address" };
+	CString column[] = { "", "Interface", "IP Address", "Ethernet Address" };
 	float nColWidth[] = { 0, 0.2, 0.5, 0.3 };
 	for (int i = 0; i < 4; i++) {
 		m_ProxyListControl.InsertColumn(i, column[i], LVCFMT_CENTER, int(cx * nColWidth[i]));
@@ -678,15 +655,28 @@ void Cipc2023Dlg::InitProxyListControlSet()
 	m_ProxyListControl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 }
 
+void Cipc2023Dlg::InitRoutingListControlSet()
+{
+	CRect r;
+	::GetClientRect(m_RoutingListControl.m_hWnd, r);
+	int cx = r.right - r.left;
+	CString column[] = { "", "Destination", "NetMask", "GateWay", "Flag", "Interface", "Metrix"};
+	float nColWidth[] = { 0, 0.2, 0.2, 0.2, 0.1, 0.2, 0.1 };
+	for (int i = 0; i < 7; i++) {
+		m_RoutingListControl.InsertColumn(i, column[i], LVCFMT_CENTER, int(cx * nColWidth[i]));
+	}
+
+	m_RoutingListControl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+}
 
 void Cipc2023Dlg::OnBnClickedItemDeleteBtn()
 {
-	int nmark = m_ListControl.GetSelectionMark();
+	int nmark = m_ArpListControl.GetSelectionMark();
 	if (nmark != -1) {
 		CString temp_ip;
-		temp_ip = m_ListControl.GetItemText(nmark, LIST_CONTROLL_IP_COLUMN);
+		temp_ip = m_ArpListControl.GetItemText(nmark, LIST_CONTROL_IP_COLUMN);
 		m_Ip->DeleteItem(temp_ip);
-		m_ListControl.DeleteItem(nmark);
+		m_ArpListControl.DeleteItem(nmark);
 
 		for (int i = nmark + 1; i < timerMaxIndex; i++) {
 			timerIndex[i]--;
@@ -697,7 +687,7 @@ void Cipc2023Dlg::OnBnClickedItemDeleteBtn()
 
 void Cipc2023Dlg::OnBnClickedAllDeleteBtn()
 {
-	m_ListControl.DeleteAllItems();
+	m_ArpListControl.DeleteAllItems();
 	for (int i = 0; i < timerMaxIndex; i++) {
 		timerIndex[i] = -1;
 	}
@@ -750,9 +740,9 @@ BOOL Cipc2023Dlg::UpdateArpCahe(unsigned char* ipAddr, unsigned char* macAddr) {
 	DstIpAddrStr.Format(_T("%d.%d.%d.%d"), ipAddr[0], ipAddr[1], ipAddr[2], ipAddr[3]);
 	DstMacAddrStr.Format(_T("%02x:%02x:%02x:%02x:%02x:%02x"), macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
 	int i;
-	for (i = 0; i < m_ListControl.GetItemCount(); i++) {
-		if (m_ListControl.GetItemText(i, LIST_CONTROLL_IP_COLUMN) == DstIpAddrStr) {
-			m_ListControl.SetItemText(i, LIST_CONTROLL_MAC_COLUMN, DstMacAddrStr);
+	for (i = 0; i < m_ArpListControl.GetItemCount(); i++) {
+		if (m_ArpListControl.GetItemText(i, LIST_CONTROL_IP_COLUMN) == DstIpAddrStr) {
+			m_ArpListControl.SetItemText(i, LIST_CONTROLL_MAC_COLUMN, DstMacAddrStr);
 			for (int k = 0; k < timerMaxIndex; i++) {
 				if (timerIndex[k] == i) {
 					SetTimer(k, 30000, NULL);
@@ -764,25 +754,14 @@ BOOL Cipc2023Dlg::UpdateArpCahe(unsigned char* ipAddr, unsigned char* macAddr) {
 	return FALSE;
 }
 
-void Cipc2023Dlg::OnEnChangeEditGarp()
+
+
+void Cipc2023Dlg::OnBnClickedIpRoutingTableItemAddBtn()
 {
-	GetDlgItemText(IDC_EDIT_GARP, m_unGarpAddr);
-}
-void Cipc2023Dlg::OnBnClickedGarpButtonSend()
-{
-	unsigned char* macAddr = MacAddr2HexInt(m_unGarpAddr);
-	if (macAddr == nullptr) {
-		AfxMessageBox(_T("Invalid MAC address format."));
-		return;
-	}
-	// MAC 주소 복사 및 설정
-	m_EthernetLayer->SetSourceAddress(macAddr);  // 복사된 MAC 주소 전달
-	m_Arp->Set_Mac_Address(macAddr);
-	// GARP 전송
-	if (m_Arp != nullptr) {
-		if (m_Arp->SendGARP(macAddr)) AfxMessageBox(_T("GARP request sent successfully."));
-	}
-	else {
-		AfxMessageBox(_T("ArpLayer not initialized."));
+	if (IpRoutingDlg == NULL) {
+		IpRoutingDlg = new Cipc2024Sub2Dlg(this);
+		IpRoutingDlg->setter(this);
+		IpRoutingDlg->Create(IDD_DIALOG2, this);
+		IpRoutingDlg->ShowWindow(SW_SHOW);
 	}
 }

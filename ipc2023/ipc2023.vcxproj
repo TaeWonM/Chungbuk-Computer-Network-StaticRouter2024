@@ -46,7 +46,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -82,6 +82,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\WpdPack\Include;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryPath>C:\WpdPack\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -119,9 +122,11 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <ConformanceMode>false</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>wpcap.lib;packet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -190,6 +195,7 @@
     <ClInclude Include="ArpLayer.h" />
     <ClInclude Include="BaseLayer.h" />
     <ClInclude Include="Cipc2023SubDlg.h" />
+    <ClInclude Include="Cipc2024Sub2Dlg.h" />
     <ClInclude Include="CNILayer.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ipc2023.h" />
@@ -206,6 +212,7 @@
     <ClCompile Include="ArpLayer.cpp" />
     <ClCompile Include="BaseLayer.cpp" />
     <ClCompile Include="Cipc2023SubDlg.cpp" />
+    <ClCompile Include="Cipc2024Sub2Dlg.cpp" />
     <ClCompile Include="EthernetLayer.cpp" />
     <ClCompile Include="CNIlayer.cpp" />
     <ClCompile Include="ipc2023.cpp" />

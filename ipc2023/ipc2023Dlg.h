@@ -9,6 +9,7 @@
 #include "EthernetLayer.h"	// Added by ClassView
 #include "CNILayer.h"	// Added by ClassView
 #include "Cipc2023SubDlg.h"
+#include "Cipc2024Sub2Dlg.h"
 #include <pcap.h>
 #include<WinSock2.h>
 #pragma comment(lib, "ws2_32.lib")
@@ -16,6 +17,7 @@
 #pragma comment(lib, "packet.lib")
 // Cipc2023Dlg 대화 상자
 class Cipc2023SubDlg;
+class Cipc2024Sub2Dlg;
 
 class Cipc2023Dlg : public CDialogEx, public CBaseLayer
 {
@@ -58,7 +60,6 @@ public:
 
 public:
 	BOOL			Receive(CString IpAddr, CString MacAddr, BOOL is_in);
-	inline void		SendData();
 
 private:
 	CLayerManager	m_LayerMgr;
@@ -92,20 +93,22 @@ public:
 	unsigned char* MacAddr2HexInt(CString Mac_address);
 	unsigned char* IpAddr2HexInt(CString Ip_address);
 	afx_msg void OnBnClickedButtonAddr();
-	afx_msg void OnBnClickedButtonSend();
 	////////원본과 다름//////////
 	CString m_unSrcAddr;
-	CString m_unGarpAddr;
+	CString m_unSrcAddr2;
 	// 원본에서는 UINT 타입이었던 변수를 MFC에서 제공한느 문자열
 	// 클래스로 바꿈
 	/////////////////////////////
 	CString m_stMessage;
-	CComboBox m_Combobox;
-	CListCtrl m_ListControl;
+	CComboBox m_Combobox1;
+	CComboBox m_Combobox2;
+	CListCtrl m_ArpListControl;
 	CListCtrl m_ProxyListControl;
-	CIPAddressCtrl m_SrcIp;
-	CIPAddressCtrl m_DstIp;
+	CListCtrl m_RoutingListControl;
+	CIPAddressCtrl m_SrcIp1;
+	CIPAddressCtrl m_SrcIp2;
 	Cipc2023SubDlg * ProxyDlg;
+	Cipc2024Sub2Dlg * IpRoutingDlg;
 	int timerIndex[101];
 	int timerMaxIndex = 0;
 	afx_msg void OnCbnSelchangeCombo1();
@@ -123,6 +126,7 @@ public:
 	afx_msg void OnBnClickedButton2();*/
 	void InitListControlSet();
 	void InitProxyListControlSet();
+	void InitRoutingListControlSet();
 	BOOL UpdateArpCahe(unsigned char* ipAddr, unsigned char* macAddr);
 	afx_msg void OnBnClickedItemDeleteBtn();
 	afx_msg void OnBnClickedAllDeleteBtn();
@@ -130,6 +134,6 @@ public:
 	afx_msg void OnIpnFieldchangedDstIp(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedProxyDeleteBtn();
 	afx_msg void OnBnClickedProxyItemAddBtn();
-	afx_msg void OnEnChangeEditGarp();
-	afx_msg void OnBnClickedGarpButtonSend();
+	afx_msg void OnCbnSelchangeCombo2();
+	afx_msg void OnBnClickedIpRoutingTableItemAddBtn();
 };
