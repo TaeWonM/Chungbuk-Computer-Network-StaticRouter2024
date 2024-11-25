@@ -103,9 +103,11 @@ public:
 	CComboBox m_Combobox;
 	CListCtrl m_ListControl;
 	CListCtrl m_ProxyListControl;
+	CListCtrl m_RouterListControl;	// add
 	CIPAddressCtrl m_SrcIp;
 	CIPAddressCtrl m_DstIp;
 	Cipc2023SubDlg * ProxyDlg;
+	Cipc2023SubDlg * RouterDlg;		// add
 	int timerIndex[101];
 	int timerMaxIndex = 0;
 	afx_msg void OnCbnSelchangeCombo1();
@@ -123,6 +125,7 @@ public:
 	afx_msg void OnBnClickedButton2();*/
 	void InitListControlSet();
 	void InitProxyListControlSet();
+	void InitRouterListControlSet();	// add
 	BOOL UpdateArpCahe(unsigned char* ipAddr, unsigned char* macAddr);
 	afx_msg void OnBnClickedItemDeleteBtn();
 	afx_msg void OnBnClickedAllDeleteBtn();
@@ -132,4 +135,6 @@ public:
 	afx_msg void OnBnClickedProxyItemAddBtn();
 	afx_msg void OnEnChangeEditGarp();
 	afx_msg void OnBnClickedGarpButtonSend();
+	afx_msg void OnBnClickedIpRoutingTableItemAddBtn(); // add
+	afx_msg void OnBnClickedRouterDeleteBtn();	// add
 };

@@ -114,3 +114,12 @@ void ipLayer::DeleteItem(CString IpAddr) {
 void ipLayer::DeleteAllItem() {
 	m_IpMap.clear();
 }
+
+// add
+void ipLayer::AddRouterItem(CString DesAddr, CString NetMask, CString GateWay, CString Flag) {	// map이 안되다는 충격적인 사실
+	// m_RouterMap.insert({ DesAddr, std::make_tuple(NetMask, GateWay, Flag) }); // 튜플로는 string형으로 바꾸어야 한다는 사실
+}
+
+void ipLayer::DeleteRouterItem(CString IpAddr) {
+	m_RouterMap.erase(IpAddr);
+}

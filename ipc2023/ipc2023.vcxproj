@@ -78,10 +78,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\WpdPack\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\WpdPack\Lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\WinPack\WpdPack\Lib;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>C:\WinPack\WpdPack\Include;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <ExternalIncludePath>C:\WinPack\WpdPack\Include;$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryPath>C:\WinPack\WpdPack\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -190,6 +193,7 @@
     <ClInclude Include="ArpLayer.h" />
     <ClInclude Include="BaseLayer.h" />
     <ClInclude Include="Cipc2023SubDlg.h" />
+    <ClInclude Include="Cipc2023SubDlg_Router.h" />
     <ClInclude Include="CNILayer.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ipc2023.h" />
@@ -206,6 +210,7 @@
     <ClCompile Include="ArpLayer.cpp" />
     <ClCompile Include="BaseLayer.cpp" />
     <ClCompile Include="Cipc2023SubDlg.cpp" />
+    <ClCompile Include="Cipc2023SubDlg_Router.cpp" />
     <ClCompile Include="EthernetLayer.cpp" />
     <ClCompile Include="CNIlayer.cpp" />
     <ClCompile Include="ipc2023.cpp" />

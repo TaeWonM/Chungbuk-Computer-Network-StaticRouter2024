@@ -91,6 +91,7 @@ Cipc2023Dlg::Cipc2023Dlg(CWnd* pParent /*=nullptr*/)
 	//메세지 문자열을 빈문자열로 초기화
 {
 	ProxyDlg = NULL;
+	RouterDlg = NULL;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	//Protocol Layer Setting
@@ -128,6 +129,7 @@ void Cipc2023Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO1, m_Combobox);
 	DDX_Control(pDX, IDC_LIST2, m_ListControl);
 	DDX_Control(pDX, IDC_LIST3, m_ProxyListControl);
+	DDX_Control(pDX, IDC_LIST4, m_RouterListControl); // add
 	DDX_Control(pDX, IDC_DST_IP, m_DstIp);
 	DDX_Control(pDX, IDC_SRC_IP, m_SrcIp);
 	// 현재 장치의 네트워크 장치를 보여줄 콤보박스 추가함
@@ -158,6 +160,12 @@ BEGIN_MESSAGE_MAP(Cipc2023Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_PROXY_DELETE_BTN, &Cipc2023Dlg::OnBnClickedProxyDeleteBtn)
 	ON_EN_CHANGE(IDC_EDIT_GARP, &Cipc2023Dlg::OnEnChangeEditGarp)
 	ON_BN_CLICKED(IDC_GARP_BUTTON_SEND, &Cipc2023Dlg::OnBnClickedGarpButtonSend)
+	ON_BN_CLICKED(IDC_IP_ROUTING_TABLE_ITEM_ADD_BTN, &Cipc2023Dlg::OnBnClickedIpRoutingTableItemAddBtn)
+	/*ON_BN_CLICKED(IDC_BUTTON_UNADDR, &Cipc2023Dlg::OnBnClickedButtonUnaddr)
+	
+	ON_BN_CLICKED(IDC_IP_ROUTER_CHECK_UP, &Cipc2023Dlg::OnBnClickedIpRouterCheckUp)
+	ON_BN_CLICKED(IDC_IP_ROUTER_CHECK_GATEWAY, &Cipc2023Dlg::OnBnClickedIpRouterCheckGateway)
+	ON_BN_CLICKED(IDC_IP_ROUTER_CHECK_HOST, &Cipc2023Dlg::OnBnClickedIpRouterCheckHost)*/ // 추가 해야할 것들
 END_MESSAGE_MAP()
 
 
@@ -664,7 +672,7 @@ void Cipc2023Dlg::InitListControlSet()
 	m_ListControl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 }
 
-void Cipc2023Dlg::InitProxyListControlSet()
+void Cipc2023Dlg::InitProxyListControlSet() // setting list
 {
 	CRect r;
 	::GetClientRect(m_ProxyListControl.m_hWnd, r);
@@ -678,6 +686,19 @@ void Cipc2023Dlg::InitProxyListControlSet()
 	m_ProxyListControl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 }
 
+void Cipc2023Dlg::InitRouterListControlSet() // add router list
+{
+	CRect r;
+	::GetClientRect(m_RouterListControl.m_hWnd, r);
+	int cx = r.right - r.left;
+	CString column[] = { "", "Destination", "NetMask", "GateWay", "Flag", "Interface", "Metric"};
+	float nColWidth[] = { 0, 0.2, 0.2, 0.2, 0.1, 0.2, 0.1 };	// 내가 생각하기엔 비율
+	for (int i = 0; i < 7; i++) {
+		m_ProxyListControl.InsertColumn(i, column[i], LVCFMT_CENTER, int(cx * nColWidth[i]));
+	}
+
+	m_ProxyListControl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+}
 
 void Cipc2023Dlg::OnBnClickedItemDeleteBtn()
 {
@@ -693,7 +714,6 @@ void Cipc2023Dlg::OnBnClickedItemDeleteBtn()
 		}
 	}
 }
-
 
 void Cipc2023Dlg::OnBnClickedAllDeleteBtn()
 {
@@ -784,5 +804,25 @@ void Cipc2023Dlg::OnBnClickedGarpButtonSend()
 	}
 	else {
 		AfxMessageBox(_T("ArpLayer not initialized."));
+	}
+}
+
+// under is added funs
+void Cipc2023Dlg::OnBnClickedIpRoutingTableItemAddBtn() { 
+	if (RouterDlg == NULL) {
+		RouterDlg = new Cipc2023SubDlg(this);
+		RouterDlg->setter(this);
+		RouterDlg->Create(IDD_DIALOG2, this);
+		RouterDlg->ShowWindow(SW_SHOW);
+	}
+}
+
+void Cipc2023Dlg::OnBnClickedRouterDeleteBtn() {
+	int nmark = m_RouterListControl.GetSelectionMark();
+	if (nmark != -1) {
+		m_RouterListControl.DeleteItem(nmark);
+		CString temp_ip;
+		temp_ip = m_RouterListControl.GetItemText(1, 2); // 이거 바꿔야함
+		m_Ip->DeleteRouterItem(temp_ip);
 	}
 }
