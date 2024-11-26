@@ -24,8 +24,8 @@ public:
 	//BOOL			sendAck(unsigned char* ppayload);
 	std::map<CString,CString> m_IpMap;
 	std::map<CString, CString> m_ProxyMap;
-	BOOL			Receive(unsigned char* ppayload, BOOL is_in);
-	BOOL			Send(unsigned char* ppayload, int nlength);
+	BOOL			Receive(unsigned char* ppayload, BOOL is_in, int interface_ID);
+	BOOL			Send(unsigned char* ppayload, int nlength, int interface_ID);
 	void			RemoveItem(CString IpAddr, CString MacAddr);
 	BOOL			UpdateArpCahe(unsigned char* ipAddr, unsigned char* macAddr);
 	void			AddProxyItem(CString IpAddr, CString MacAddr);

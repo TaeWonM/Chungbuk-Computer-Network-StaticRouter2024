@@ -27,23 +27,30 @@ private :
 	bool is_set = false;
 	pcap_if_t* m_AdapterList[7];
 	int m_Maxadapter = 0;
-	int curAdapterIndex = 0;
-	pcap_t* fp = NULL;
+	pcap_t* tmp_fp;
 public:
-	BOOL	Receive();
-	BOOL	Send(unsigned char* ppayload, int nlength);
+	BOOL	Receive(int interface_ID);
+	BOOL	Send(unsigned char* ppayload, int nlength, int interface_ID);
 	BOOL    send_packet(pcap_t* handle, u_char* message, int len);
 	int GetMaxAdapterIndex();
 	void SetAdpterDeivce();
 	pcap_if_t* GetAdapter(int index);
 	void Set_is_set(bool value);
 	bool Get_is_set();
-	int GetCurAdapterIndex();
-	void SetCurAdapterIndex(int value);
+	int GetAdapterIndex(int index);
+	void SetAdapterIndex(int value, int index);
 	CNILayer(char* pName);
 	static UINT ReceiveThread(LPVOID pParam);
 	CWinThread * m_pThread = NULL;
 	virtual ~CNILayer();
+
+	typedef struct ThreadStruct
+	{
+		CNILayer* Layer;
+		int adapter_num;
+	}*_PTHREADSTRUCT, _THREADSTRUCT;
+protected:
+	_PTHREADSTRUCT m_adapterIndex[2];
 };
 
 #endif // !defined(AFX_FILELAYER_H__D67222B3_1B00_4C77_84A4_CEF6D572E181__INCLUDED_)

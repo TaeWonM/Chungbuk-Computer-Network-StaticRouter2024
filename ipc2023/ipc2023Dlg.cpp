@@ -20,11 +20,6 @@
 #define LIST_CONTROLL_STATUS_COLUMN 4
 
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
 
@@ -281,7 +276,7 @@ HCURSOR Cipc2023Dlg::OnQueryDragIcon()
 
 
 
-BOOL Cipc2023Dlg::Receive(CString IpAddr, CString MacAddr, BOOL is_In)
+BOOL Cipc2023Dlg::Receive(CString IpAddr, CString MacAddr, BOOL is_In, int interface_ID)
 {
 	/////////////////////////////////수정됨//////////////////////////////////////////
 	if (is_In) {
@@ -300,10 +295,13 @@ BOOL Cipc2023Dlg::Receive(CString IpAddr, CString MacAddr, BOOL is_In)
 		return FALSE;
 	}
 	else {
+		CString interface_IDstr;
+		interface_IDstr.Format("%d", interface_ID);
 		int i = m_ArpListControl.GetItemCount();
 		m_ArpListControl.InsertItem(i, "");
 		m_ArpListControl.SetItemText(i, LIST_CONTROL_IP_COLUMN, IpAddr);
-		m_ArpListControl.SetItemText(i, 2, MacAddr);
+		m_ArpListControl.SetItemText(i, LIST_CONTROLL_MAC_COLUMN, MacAddr);
+		m_ArpListControl.SetItemText(i, LIST_CONTROL_INTERFACE_COLUMN, interface_IDstr);
 		m_ArpListControl.SetItemText(i, LIST_CONTROLL_STATUS_COLUMN, _T("complete"));
 		for (int k = 0; k < timerMaxIndex; k++) {
 			if (timerIndex[k] <= -1) {
@@ -386,7 +384,8 @@ void Cipc2023Dlg::SetDlgState(int state)
 		m_SrcIp2.EnableWindow(FALSE);
 		/////////////////////////////////////////////
 		// NI레이어의 Set_is_set true 로 설정 (추가됨)
-		if (!m_NILayer->Receive()) SetDlgState(IPC_ADDR_RESET);
+		if (!m_NILayer->Receive(0)) SetDlgState(IPC_ADDR_RESET);
+		if (!m_NILayer->Receive(1)) SetDlgState(IPC_ADDR_RESET);
 		// NI레이어의 receive가 false인 경우 SetDlgState(IPC_ADDR_RESET)을 진행
 		// 여기서 삭제 버튼 활성화, 상대 주소 입력되게 하기
 		pitemDeleteButton->EnableWindow(TRUE);
@@ -445,7 +444,7 @@ void Cipc2023Dlg::OnBnClickedButtonAddr()
 {
 	UpdateData(TRUE);
 
-	if ((m_unSrcAddr.IsEmpty()))
+	if (m_unSrcAddr.IsEmpty() || m_unSrcAddr2.IsEmpty())
 		// 자기 자신을 목적지로 설정 할 수 없게 함(추가)
 	{
 		AfxMessageBox(_T("주소를 설정 오류발생",
@@ -462,17 +461,19 @@ void Cipc2023Dlg::OnBnClickedButtonAddr()
 	else {
 		////////////////////////////////////추가된 부분///////////////////////////////////
 		unsigned char* SrcAddr = MacAddr2HexInt(m_unSrcAddr);
+		unsigned char* SrcAddr2 = MacAddr2HexInt(m_unSrcAddr2);
 		if (SrcAddr == nullptr) {
 			return;
 		}
 		// MacAddr2HexInt함수의 소스 주소 또는 목적지 주소가 잘못 설정되어 
 		// nullptr을 반환한 경우 실행을 중단하도록 추가
-		m_EthernetLayer->SetSourceAddress(SrcAddr);
+		m_EthernetLayer->SetSourceAddress(SrcAddr, SrcAddr2);
 		unsigned char IpAddress1[4];
 		unsigned char IpAddress2[4];
 		m_SrcIp1.GetAddress(IpAddress1[0], IpAddress1[1], IpAddress1[2], IpAddress1[3]);
 		m_SrcIp2.GetAddress(IpAddress2[0], IpAddress2[1], IpAddress2[2], IpAddress2[3]);
-		m_Arp->Set_Sender_Address(SrcAddr, IpAddress1);
+		m_Arp->Set_Sender_Address(SrcAddr, IpAddress1, 0);
+		m_Arp->Set_Sender_Address(SrcAddr2, IpAddress1, 1);
 		// 이더넷 레이어에서 선언한 SetSourceAddress 함수를 가져와 사용하고 있음
 		// dlg 헤더 파일을 보면 m_EthernetLayer가 CEthernetLayer* 즉 포인터임을
 		// 확인 가능함
@@ -511,9 +512,8 @@ void Cipc2023Dlg::OnCbnSelchangeCombo1()
 
 
 	int i = 0;
-	int indexnum = m_Combobox1.GetCurSel();	// 콤보 박스에서 선택한 네트워크 장치의 인덱스 가져오기
-	//오늘 변경된 부분///////////////////////////////////////////////////////
-	m_NILayer->SetCurAdapterIndex(indexnum);	// 현재 어뎁터의 인덱스 설정
+	int indexnum = m_Combobox1.GetCurSel();
+	m_NILayer->SetAdapterIndex(indexnum, 0);	// 현재 어뎁터의 인덱스 설정
 	if (pcap_lookupnet(m_NILayer->GetAdapter(indexnum)->name, &net, &mask, errbuf) < 0) {
 		return;
 		printf("error");
@@ -551,9 +551,8 @@ void Cipc2023Dlg::OnCbnSelchangeCombo2()
 
 
 	int i = 0;
-	int indexnum = m_Combobox2.GetCurSel();	// 콤보 박스에서 선택한 네트워크 장치의 인덱스 가져오기
-	//오늘 변경된 부분///////////////////////////////////////////////////////
-	m_NILayer->SetCurAdapterIndex(indexnum);	// 현재 어뎁터의 인덱스 설정
+	int indexnum = m_Combobox2.GetCurSel();
+	m_NILayer->SetAdapterIndex(indexnum, 1);	// 현재 어뎁터의 인덱스 설정
 	if (pcap_lookupnet(m_NILayer->GetAdapter(indexnum)->name, &net, &mask, errbuf) < 0) {
 		return;
 		printf("error");

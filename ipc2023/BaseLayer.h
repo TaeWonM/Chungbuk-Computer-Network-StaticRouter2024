@@ -30,15 +30,16 @@ public:
 
 	// param : unsigned char*	- the data of the upperlayer
 	//         int				- the length of data
-	virtual	BOOL	Send(unsigned char*, int) { return FALSE; }
-	virtual	BOOL	Send(unsigned char*, int, int) { return FALSE; }
+	virtual	BOOL	Send(unsigned char*, int nlength, int interface_ID) { return FALSE; }
+	virtual	BOOL	Send(unsigned char*, int nlength, int DetLayer, int interface_ID) { return FALSE; }
 	// param : unsigned char*	- the data of the underlayer
-	virtual	BOOL	Receive(unsigned char* ppayload) { return FALSE; }
-	virtual	BOOL	Receive(unsigned char* ppayload, BOOL is_in) { return FALSE; }
-	virtual	BOOL	Receive(CString IpAddr, CString MacAddr, BOOL is_in) { return FALSE; }
-	virtual BOOL	SetMacDstAddress(unsigned char* ppayload) { return mp_UnderLayer[0]->SetMacDstAddress(ppayload); }
+	virtual	BOOL	Receive(int interface_ID) { return FALSE; }
+	virtual BOOL	Receive(unsigned char* ppayload, int interface_ID) { return FALSE; };
+	virtual BOOL	Receive(unsigned char* ppayload, BOOL is_in, int interface_ID) { return FALSE; };
+	virtual	BOOL	Receive(CString IpAddr, CString MacAddr, BOOL is_in, int interface_ID) { return FALSE; };
+	virtual BOOL	SetMacDstAddress(unsigned char* ppayload, int interface_ID) { return mp_UnderLayer[0]->SetMacDstAddress(ppayload, interface_ID); }
 	virtual BOOL	UpdateArpCahe(unsigned char* ipAddr, unsigned char* macAddr) { return mp_UnderLayer[0]->UpdateArpCahe(ipAddr, macAddr); }
-	virtual BOOL	SetMacSrcAddress(unsigned char* ppayload) { return mp_UnderLayer[0]->SetMacSrcAddress(ppayload); }
+	virtual BOOL	SetMacSrcAddress(unsigned char* ppayload, int interface_ID) { return mp_UnderLayer[0]->SetMacSrcAddress(ppayload, interface_ID); }
 protected:
 	char* m_pLayerName;
 	CBaseLayer* mp_UnderLayer[MAX_LAYER_NUMBER];							// UnderLayer pointer

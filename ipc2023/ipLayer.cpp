@@ -6,11 +6,6 @@
 #include "pch.h"
 #include "ipLayer.h"
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#define new DEBUG_NEW
-#endif
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -24,37 +19,24 @@ ipLayer::ipLayer(char* pName)
 
 ipLayer::~ipLayer()
 {
-	TRY
-	{
-		//////////////////////// fill the blank ///////////////////////////////
-				CFile::Remove(_T("IpcBuff.txt")); // 파일 제거
-	///////////////////////////////////////////////////////////////////////
-	}
-		CATCH(CFileException, e)
-	{
-#ifdef _DEBUG
-		afxDump << "File cannot be removed\n";
-#endif
-	}
-	END_CATCH
 }
 
 void ipLayer::ResetHeader() {
 	//m_IpAddrmap.clear();
 }
-BOOL ipLayer::Send(unsigned char* ppayload, int nlength)
+BOOL ipLayer::Send(unsigned char* ppayload, int nlength, int interface_ID)
 {	
 	CString unIpAddr;
 	unIpAddr.Format("%d.%d.%d.%d", ppayload[0], ppayload[1], ppayload[2], ppayload[3]);
 	if (!m_IpMap.empty() && m_IpMap.find(unIpAddr) != m_IpMap.end()) return TRUE;
 	else {
 		m_IpMap.insert({unIpAddr, nullString});
-		return mp_UnderLayer[0]->Send(ppayload, 4);
+		return mp_UnderLayer[0]->Send(ppayload, 4, interface_ID);
 	}
 }
 // 가장 아래 계층인 File 계층의 Send 함수 입니다. IpcBuff.txt라는 파일을 만들어서 적습니다
 
-BOOL ipLayer::Receive(unsigned char* ppayload, BOOL is_in)
+BOOL ipLayer::Receive(unsigned char* ppayload, BOOL is_in, int interface_ID)
 {
 	unsigned char DstIpAddr[4];
 	unsigned char DstMacAddr[6];
@@ -73,10 +55,10 @@ BOOL ipLayer::Receive(unsigned char* ppayload, BOOL is_in)
 	else {
 		if (!m_IpMap.empty() && m_IpMap.find(DstIpAddrStr) != m_IpMap.end()) {
 			m_IpMap[DstIpAddrStr] = DstMacAddrStr;
-			return mp_aUpperLayer[0]->Receive(DstIpAddrStr, DstMacAddrStr, TRUE);
+			return mp_aUpperLayer[0]->Receive(DstIpAddrStr, DstMacAddrStr, TRUE, interface_ID);
 		}
 		m_IpMap.insert({ DstIpAddrStr , DstMacAddrStr });
-		return mp_aUpperLayer[0]->Receive(DstIpAddrStr, DstMacAddrStr, FALSE);
+		return mp_aUpperLayer[0]->Receive(DstIpAddrStr, DstMacAddrStr, FALSE, interface_ID);
 	}
 }
 

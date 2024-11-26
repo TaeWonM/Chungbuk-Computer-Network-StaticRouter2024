@@ -59,7 +59,7 @@ public:
 
 
 public:
-	BOOL			Receive(CString IpAddr, CString MacAddr, BOOL is_in);
+	BOOL			Receive(CString IpAddr, CString MacAddr, BOOL is_in, int interface_ID);
 
 private:
 	CLayerManager	m_LayerMgr;

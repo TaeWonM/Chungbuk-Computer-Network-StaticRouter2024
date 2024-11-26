@@ -19,20 +19,20 @@ class ArpLayer
 private:
 	inline void		ResetHeader();
 	CObject* mp_Dlg;
-	unsigned char m_ipAddr[4];
+	unsigned char m_ipAddr[2][4];
 	unsigned char BroadingCastAddr[6];
 	int arp_cache_count;
 
 public:
-	unsigned char m_macAddr[6];
-	BOOL			Receive(unsigned char* ppayload);
-	BOOL			Send(unsigned char* DstIpAddress, int nlength);
-	void			Set_Sender_Address(unsigned char* MACAddr, unsigned char* IpAddress);
-	void			Set_Mac_Address(unsigned char* MACAddr);
-	void			Set_Ip_Address(unsigned char* IpAddr);
+	unsigned char m_macAddr[2][6];
+	BOOL			Receive(unsigned char* ppayload, int interface_ID);
+	BOOL			Send(unsigned char* DstIpAddress, int nlength, int interface_ID);
+	void			Set_Sender_Address(unsigned char* MACAddr, unsigned char* IpAddress, int interface_ID);
+	void			Set_Mac_Address(unsigned char* MACAddr, int interface_ID);
+	void			Set_Ip_Address(unsigned char* IpAddr, int interface_ID);
 	ArpLayer(char* pName);
 	virtual ~ArpLayer();
-	BOOL			SendGARP(const unsigned char* macAddr);
+	BOOL			SendGARP(const unsigned char* macAddr, int interface_ID);
 
 	typedef struct _ARP_HEADER {
 		unsigned short	hard_type; // total length of the data
@@ -50,8 +50,8 @@ public:
 
 
 protected:
-	ARP_HEADER		m_sHeader;
-	ARP_HEADER		m_replyHeader;
+	ARP_HEADER		m_sHeader[2];
+	ARP_HEADER		m_replyHeader[2];
 
 	enum {
 		DATA_TYPE_CONT = 0x01,
