@@ -289,7 +289,7 @@ BOOL Cipc2023Dlg::Receive(CString IpAddr, CString MacAddr, BOOL is_In, int inter
 				for (k = 0; k < timerMaxIndex; k++) {
 					if (i == timerIndex[k]) break;
 				}
-				SetTimer(k, 30000, NULL);
+				SetTimer(k, 300000, NULL);
 			}
 		}
 		return FALSE;
@@ -305,7 +305,7 @@ BOOL Cipc2023Dlg::Receive(CString IpAddr, CString MacAddr, BOOL is_In, int inter
 		m_ArpListControl.SetItemText(i, LIST_CONTROLL_STATUS_COLUMN, _T("complete"));
 		for (int k = 0; k < timerMaxIndex; k++) {
 			if (timerIndex[k] <= -1) {
-				SetTimer(k, 30000, NULL);
+				SetTimer(k, 300000, NULL);
 				timerIndex[k] = i;
 				return FALSE;
 			}
@@ -744,7 +744,7 @@ BOOL Cipc2023Dlg::UpdateArpCahe(unsigned char* ipAddr, unsigned char* macAddr) {
 			m_ArpListControl.SetItemText(i, LIST_CONTROLL_MAC_COLUMN, DstMacAddrStr);
 			for (int k = 0; k < timerMaxIndex; i++) {
 				if (timerIndex[k] == i) {
-					SetTimer(k, 30000, NULL);
+					SetTimer(k, 300000, NULL);
 					return TRUE;
 				}
 			}

@@ -32,6 +32,7 @@ public:
 	//         int				- the length of data
 	virtual	BOOL	Send(unsigned char*, int nlength, int interface_ID) { return FALSE; }
 	virtual	BOOL	Send(unsigned char*, int nlength, int DetLayer, int interface_ID) { return FALSE; }
+	virtual BOOL	SendArp(unsigned char* ppayload, unsigned char* MacAddr, int nlength, int interface_ID) { return FALSE; }
 	// param : unsigned char*	- the data of the underlayer
 	virtual	BOOL	Receive(int interface_ID) { return FALSE; }
 	virtual BOOL	Receive(unsigned char* ppayload, int interface_ID) { return FALSE; };

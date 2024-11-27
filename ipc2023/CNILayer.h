@@ -24,7 +24,7 @@ class CNILayer
 {
 private :
 	bool is_set = false;
-	pcap_if_t* m_AdapterList[MAX_ADAPTER_SIZE];
+	pcap_if_t* m_AdapterList[ADAPTER_MAX_SIZE];
 	int m_Maxadapter = 0;
 	pcap_t* tmp_fp;
 public:
@@ -49,7 +49,7 @@ public:
 		int adapter_num;
 	}*_PTHREADSTRUCT, _THREADSTRUCT;
 protected:
-	_PTHREADSTRUCT m_adapterIndex[MAX_ADAPTER_SIZE];
+	_PTHREADSTRUCT m_adapterIndex[ADAPTER_MAX_SIZE];
 };
 
 #endif // !defined(AFX_FILELAYER_H__D67222B3_1B00_4C77_84A4_CEF6D572E181__INCLUDED_)

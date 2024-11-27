@@ -45,7 +45,9 @@
 
 #define BOARDCAST_ETH_ADRR          0xffffffffffff
 
-#define MAX_ADAPTER_SIZE			7
+#define ADAPTER_MAX_SIZE			7
+#define IP_ROUTING_TABLE_MAX_SIZE	20
+#define IP_QUEUE_SIZE				10
 
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

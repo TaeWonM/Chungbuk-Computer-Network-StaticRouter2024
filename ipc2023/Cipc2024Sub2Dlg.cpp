@@ -153,6 +153,7 @@ void Cipc2024Sub2Dlg::OnOK()
 	if (m_Check_GateWay.GetCheck()) FlagStr += GFlag;
 	else if (m_Check_Host.GetCheck()) FlagStr += HFlag;
 	CString deviceID;
+	parent->m_Ip->AddRoutingTable(unDst_Ip_Address, unNetMask, unGetWay, FlagStr, m_Combobox.GetCurSel());
 	deviceID.Format(_T("%d"), m_Combobox.GetCurSel());
 	int ItemIndex = parent->m_RoutingListControl.GetItemCount();
 	parent->m_RoutingListControl.InsertItem(ItemIndex, "");

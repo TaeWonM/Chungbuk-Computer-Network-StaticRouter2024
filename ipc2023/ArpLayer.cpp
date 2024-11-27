@@ -33,7 +33,7 @@ ArpLayer::~ArpLayer()
 
 void ArpLayer::ResetHeader()
 {
-	for (int i = 0; i < MAX_ADAPTER_SIZE; i++) {
+	for (int i = 0; i < ADAPTER_MAX_SIZE; i++) {
 		m_sHeader[i].hard_type = htons(0x0001);
 		m_sHeader[i].portocal_type = htons(0x0800);
 		m_sHeader[i].hard_size = 6;
@@ -70,6 +70,12 @@ BOOL ArpLayer::Send(unsigned char* DstIpAddress, int nlength, int interface_ID)
 }
 // ������ ������ Send �Լ��Դϴ�. ����� ���̸� �����ϰ�, �̸� ppayload�� �ִ� data�� �����Ͽ� �� ����(��, CEthernetLayer)�� Send�� �Լ��� �����մϴ�.
 
+
+BOOL ArpLayer::SendArp(unsigned char* ppayload, unsigned char *DstMacAddr,int nlength, int interface_ID) {
+
+	Send(DstMacAddr, 4, interface_ID);
+	return TRUE;
+}
 
 BOOL ArpLayer::Receive(unsigned char* ppayload, int interface_ID) {
 	BOOL is_in = FALSE;

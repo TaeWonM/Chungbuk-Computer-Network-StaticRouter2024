@@ -14,7 +14,7 @@
 CNILayer::CNILayer(char* pName)
 	: CBaseLayer(pName)
 {
-	for (int i = 0; i < MAX_ADAPTER_SIZE; i++) {
+	for (int i = 0; i < ADAPTER_MAX_SIZE; i++) {
 		m_adapterIndex[i] = new _THREADSTRUCT;
 		m_adapterIndex[i]->Layer = this;
 	}

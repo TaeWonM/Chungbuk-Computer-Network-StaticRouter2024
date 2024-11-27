@@ -27,7 +27,7 @@ CEthernetLayer::~CEthernetLayer()
 
 void CEthernetLayer::ResetHeader()
 {
-	for (int i = 0; i < MAX_ADAPTER_SIZE; i++) {
+	for (int i = 0; i < ADAPTER_MAX_SIZE; i++) {
 		memset(m_sHeader[i].enet_dstaddr, 0, 6);
 		memset(m_sHeader[i].enet_srcaddr, 0, 6);
 		memset(m_sHeader[i].enet_data, 0, ETHER_MAX_DATA_SIZE);
