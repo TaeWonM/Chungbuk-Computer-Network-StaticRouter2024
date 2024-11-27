@@ -19,12 +19,12 @@ class ArpLayer
 private:
 	inline void		ResetHeader();
 	CObject* mp_Dlg;
-	unsigned char m_ipAddr[2][4];
+	unsigned char m_ipAddr[MAX_ADAPTER_SIZE][4];
 	unsigned char BroadingCastAddr[6];
 	int arp_cache_count;
 
 public:
-	unsigned char m_macAddr[2][6];
+	unsigned char m_macAddr[MAX_ADAPTER_SIZE][6];
 	BOOL			Receive(unsigned char* ppayload, int interface_ID);
 	BOOL			Send(unsigned char* DstIpAddress, int nlength, int interface_ID);
 	void			Set_Sender_Address(unsigned char* MACAddr, unsigned char* IpAddress, int interface_ID);
@@ -50,8 +50,8 @@ public:
 
 
 protected:
-	ARP_HEADER		m_sHeader[2];
-	ARP_HEADER		m_replyHeader[2];
+	ARP_HEADER		m_sHeader[MAX_ADAPTER_SIZE];
+	ARP_HEADER		m_replyHeader[MAX_ADAPTER_SIZE];
 
 	enum {
 		DATA_TYPE_CONT = 0x01,

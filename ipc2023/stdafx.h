@@ -45,6 +45,8 @@
 
 #define BOARDCAST_ETH_ADRR          0xffffffffffff
 
+#define MAX_ADAPTER_SIZE			7
+
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
 #endif // !defined(AFX_STDAFX_H__119ECB1B_6E70_4662_A2A9_A20B5201CA81__INCLUDED_)

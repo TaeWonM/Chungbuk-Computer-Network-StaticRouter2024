@@ -14,7 +14,7 @@
 CNILayer::CNILayer(char* pName)
 	: CBaseLayer(pName)
 {
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < MAX_ADAPTER_SIZE; i++) {
 		m_adapterIndex[i] = new _THREADSTRUCT;
 		m_adapterIndex[i]->Layer = this;
 	}
@@ -27,7 +27,7 @@ CNILayer::~CNILayer()
 BOOL CNILayer::Send(unsigned char* ppayload, int nlength, int interface_ID)
 {
 	char errbuf[1001];
-	if ((tmp_fp = pcap_open_live(m_AdapterList[m_adapterIndex[interface_ID]->adapter_num]->name, 65536, 0, 1000, errbuf)) == NULL) {
+	if ((tmp_fp = pcap_open_live(m_AdapterList[interface_ID]->name, 65536, 0, 1000, errbuf)) == NULL) {
 		AfxMessageBox(_T("Unable to open the adapter"));
 		return false;
 	}
@@ -60,9 +60,6 @@ UINT CNILayer::ReceiveThread(LPVOID pParam) {
 	ThreadStruct* Param = (ThreadStruct*)pParam;
 	CNILayer* PID = Param->Layer;
 	int adapternum = Param->adapter_num;
-	int curIndex;
-	if (PID->m_adapterIndex[0]->adapter_num == adapternum) curIndex = 0;
-	else curIndex = 1;
 	pcap_t* fp;
 	char errbuf[1001];
 	if ((fp = pcap_open_live(PID->m_AdapterList[adapternum]->name, 65536, 0, 1000, errbuf)) == NULL) {
@@ -79,7 +76,7 @@ UINT CNILayer::ReceiveThread(LPVOID pParam) {
 
 		}
 		else if (result == 1) {
-			if (PID->mp_aUpperLayer[0]->Receive((u_char*)pkt_data, curIndex)) {
+			if (PID->mp_aUpperLayer[0]->Receive((u_char*)pkt_data, adapternum)) {
 			}
 		}
 	}
@@ -95,6 +92,7 @@ void CNILayer::SetAdpterDeivce() {
 	}
 	for (d = alldevs; d; d = d->next) {
 		m_AdapterList[m_Maxadapter] = d;
+		m_adapterIndex[m_Maxadapter]->adapter_num = m_Maxadapter;
 		m_Maxadapter++;
 	}
 }

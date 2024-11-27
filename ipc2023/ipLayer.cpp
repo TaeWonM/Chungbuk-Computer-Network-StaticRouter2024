@@ -34,8 +34,8 @@ BOOL ipLayer::Send(unsigned char* ppayload, int nlength, int interface_ID)
 		return mp_UnderLayer[0]->Send(ppayload, 4, interface_ID);
 	}
 }
-// 가장 아래 계층인 File 계층의 Send 함수 입니다. IpcBuff.txt라는 파일을 만들어서 적습니다
 
+// ARP에 대한 Receive 입니다.
 BOOL ipLayer::Receive(unsigned char* ppayload, BOOL is_in, int interface_ID)
 {
 	unsigned char DstIpAddr[4];
@@ -60,6 +60,11 @@ BOOL ipLayer::Receive(unsigned char* ppayload, BOOL is_in, int interface_ID)
 		m_IpMap.insert({ DstIpAddrStr , DstMacAddrStr });
 		return mp_aUpperLayer[0]->Receive(DstIpAddrStr, DstMacAddrStr, FALSE, interface_ID);
 	}
+}
+
+BOOL ipLayer::Receive(unsigned char* ppayload, int interface_ID)
+{
+	return FALSE;
 }
 
 void ipLayer::RemoveItem(CString IpAddr, CString MacAddr) {

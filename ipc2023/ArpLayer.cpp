@@ -33,7 +33,7 @@ ArpLayer::~ArpLayer()
 
 void ArpLayer::ResetHeader()
 {
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < MAX_ADAPTER_SIZE; i++) {
 		m_sHeader[i].hard_type = htons(0x0001);
 		m_sHeader[i].portocal_type = htons(0x0800);
 		m_sHeader[i].hard_size = 6;
