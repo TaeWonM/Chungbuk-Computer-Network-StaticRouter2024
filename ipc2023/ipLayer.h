@@ -37,6 +37,7 @@ public:
 	void			DeleteAllItem();
 	void			initRoutingTable();
 	unsigned char*	MacAddr2HexInt(CString Mac_address);
+	unsigned char*	IpAddr2HexInt(CString Ip_address);
 	void			AddRoutingTable(unsigned char * Destination, unsigned char* Netmask, unsigned char* Gateway, CString Flag, int interface_ID);
 	void			AddQueue(unsigned char* DstIPAddr, unsigned char* ppayload, int interface_ID);
 	ipLayer(char* pName);
@@ -45,6 +46,7 @@ public:
 		unsigned char	Version_Length; // total length of the data
 		unsigned char	TOS; // type of application data
 		unsigned short  TotalLengh;
+		unsigned short  Identification;
 		unsigned short	Flags_FragmentOffset; // application data
 		unsigned char	ToTimeLive;
 		unsigned char	Protocol;

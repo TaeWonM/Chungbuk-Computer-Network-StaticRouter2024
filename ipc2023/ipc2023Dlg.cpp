@@ -101,7 +101,7 @@ Cipc2023Dlg::Cipc2023Dlg(CWnd* pParent /*=nullptr*/)
 	// 대화 상자 레이어 추가
 
 	// 레이어를 연결한다. (레이어 생성)
-	m_LayerMgr.ConnectLayers("NI ( *Ethernet ( *Arp ( *Ip ( *ChatDlg ) ) ) ( *Ip ( *ChatDlg ) ) )");
+	m_LayerMgr.ConnectLayers("NI ( *Ethernet ( *Arp ( *Ip ( *ChatDlg ) )  *Ip ( *ChatDlg ) ) ");
 	// 기존에 file 레이어 부분 대신 NI 레이어를 추가함
 	////////////////////////추가됨///////////////////////////////
 	m_Ip = (ipLayer*)m_LayerMgr.GetLayer("Ip");
@@ -296,7 +296,7 @@ BOOL Cipc2023Dlg::Receive(CString IpAddr, CString MacAddr, BOOL is_In, int inter
 	}
 	else {
 		CString interface_IDstr;
-		interface_IDstr.Format("%d", m_Combobox2.GetCurSel());
+		interface_IDstr.Format("%d", interface_ID);
 		int i = m_ArpListControl.GetItemCount();
 		m_ArpListControl.InsertItem(i, "");
 		m_ArpListControl.SetItemText(i, LIST_CONTROL_IP_COLUMN, IpAddr);
@@ -310,7 +310,7 @@ BOOL Cipc2023Dlg::Receive(CString IpAddr, CString MacAddr, BOOL is_In, int inter
 				return FALSE;
 			}
 		}
-		SetTimer(i, 30000, NULL);
+		SetTimer(i, 300000, NULL);
 		timerIndex[i] = i;
 		timerMaxIndex++;
 		//////////////////////////////////////////////////////////////////////////////////
@@ -467,7 +467,8 @@ void Cipc2023Dlg::OnBnClickedButtonAddr()
 		}
 		// MacAddr2HexInt함수의 소스 주소 또는 목적지 주소가 잘못 설정되어 
 		// nullptr을 반환한 경우 실행을 중단하도록 추가
-		m_EthernetLayer->SetSourceAddress(SrcAddr, SrcAddr2);
+		m_EthernetLayer->SetMacSrcAddress(SrcAddr, m_Combobox1.GetCurSel());
+		m_EthernetLayer->SetMacSrcAddress(SrcAddr2, m_Combobox2.GetCurSel());
 		unsigned char IpAddress1[4];
 		unsigned char IpAddress2[4];
 		m_SrcIp1.GetAddress(IpAddress1[0], IpAddress1[1], IpAddress1[2], IpAddress1[3]);

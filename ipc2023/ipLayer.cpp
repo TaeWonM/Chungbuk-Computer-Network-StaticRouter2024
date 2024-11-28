@@ -15,6 +15,7 @@ ipLayer::ipLayer(char* pName)
 	: CBaseLayer(pName), nullString("NULL")
 {
 	ResetHeader();
+	initRoutingTable();
 }
 
 ipLayer::~ipLayer()
@@ -81,9 +82,11 @@ BOOL ipLayer::Receive(unsigned char* ppayload, int interface_ID)
 	for (index = 0; index < m_Routing_Table_Max_Index; index++) {
 		int i;
 		for (i = 0; i < IP_ADDRESS_SIZE; i++) {
-			if (m_IP_Routing_Table[index].m_Netmask[i] & payload->target_IP_address[i] != m_IP_Routing_Table[index].m_Destination[i]) break;
+			if ((m_IP_Routing_Table[index].m_Netmask[i] & payload->target_IP_address[i]) != m_IP_Routing_Table[index].m_Destination[i]) break;
 		}
-		if (i == IP_ADDRESS_SIZE) break;
+		if (i == IP_ADDRESS_SIZE) {
+			break;
+		}
 	}
 	if (index == m_Routing_Table_Max_Index) {
 		AfxMessageBox(_T("Nothing Mached"));
@@ -109,18 +112,18 @@ BOOL ipLayer::Receive(unsigned char* ppayload, int interface_ID)
 			}
 			else {
 				//존재하는데, nullString 값이 들어있으니 큐에 넣고, Arp 날리기..
-				DstIpAddr = MacAddr2HexInt(m_IpMap[DstIpAddrStr]);
+				DstIpAddr = IpAddr2HexInt(DstIpAddrStr);
 				AddQueue(DstIpAddr, ppayload, m_IP_Routing_Table[index].m_interfaceID);
-				free(DstIpAddr);
-				return mp_UnderLayer[0]->Send(DstIpAddr, 4, m_IP_Routing_Table[index].m_interfaceID);
+				mp_UnderLayer[0]->Send(DstIpAddr, 4, m_IP_Routing_Table[index].m_interfaceID);
+				return TRUE;
 			}
 		}
 		else {
 			//존재하지 않으니까, 큐에 넣고, Arp 날리기..
-			DstIpAddr = MacAddr2HexInt(m_IpMap[DstIpAddrStr]);
+			DstIpAddr = IpAddr2HexInt(DstIpAddrStr);
 			AddQueue(DstIpAddr, ppayload, m_IP_Routing_Table[index].m_interfaceID);
-			free(DstIpAddr);
-			return mp_UnderLayer[0]->Send(DstIpAddr, 4, m_IP_Routing_Table[index].m_interfaceID);
+			mp_UnderLayer[0]->Send(DstIpAddr, 4, m_IP_Routing_Table[index].m_interfaceID);
+			return TRUE;
 		}
 	}
 	//Flag에 따라 움직이는 법이 달라짐..
@@ -139,18 +142,18 @@ BOOL ipLayer::Receive(unsigned char* ppayload, int interface_ID)
 			}
 			else {
 				//중요하게 달라진 부분은 밑 부분.. Gateway의 Ip Address를 넣고 있다.
-				DstIpAddr = MacAddr2HexInt(m_IpMap[DstIpAddrStr]);
+				DstIpAddr = IpAddr2HexInt(DstIpAddrStr);
 				AddQueue(DstIpAddr, ppayload, m_IP_Routing_Table[index].m_interfaceID);
-				free(DstIpAddr);
-				return mp_UnderLayer[0]->Send(DstIpAddr, 4, m_IP_Routing_Table[index].m_interfaceID);
+				mp_UnderLayer[0]->Send(DstIpAddr, 4, m_IP_Routing_Table[index].m_interfaceID);
+				return TRUE;
 			}
 		}
 		else {
 			//중요하게 달라진 부분은 밑 부분.. Gateway의 Ip Address를 넣고 있다.
-			DstIpAddr = MacAddr2HexInt(m_IpMap[DstIpAddrStr]);
+			DstIpAddr = IpAddr2HexInt(DstIpAddrStr);
 			AddQueue(DstIpAddr, ppayload, m_IP_Routing_Table[index].m_interfaceID);
-			free(DstIpAddr);
-			return mp_UnderLayer[0]->Send(DstIpAddr, 4, m_IP_Routing_Table[index].m_interfaceID);
+			mp_UnderLayer[0]->Send(DstIpAddr, 4, m_IP_Routing_Table[index].m_interfaceID);
+			return TRUE;
 		}
 	}
 	if (m_IP_Routing_Table[index].m_Flag == "UH") {
@@ -206,8 +209,8 @@ void ipLayer::initRoutingTable() {
 
 void ipLayer::AddRoutingTable(unsigned char* Destination, unsigned char* Netmask, unsigned char* Gateway, CString Flag, int interface_ID) {
 	memcpy(m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Destination, Destination, IP_ADDRESS_SIZE);
-	memcpy(m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Netmask, Destination, IP_ADDRESS_SIZE);
-	memcpy(m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Gateway, Destination, IP_ADDRESS_SIZE);
+	memcpy(m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Netmask, Netmask, IP_ADDRESS_SIZE);
+	memcpy(m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Gateway, Gateway, IP_ADDRESS_SIZE);
 	m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Flag = Flag;
 	m_IP_Routing_Table[m_Routing_Table_Max_Index].m_interfaceID = interface_ID;
 	m_Routing_Table_Max_Index++;
@@ -245,7 +248,31 @@ void ipLayer::AddQueue(unsigned char* DstIPAddr, unsigned char* ppayload, int in
 	unsigned char* temp_payload;
 	temp_payload = new unsigned char[payload->TotalLengh];
 	memcpy(temp_payload, ppayload, payload->TotalLengh);
-	memcpy(temp.payload, temp_payload, payload->TotalLengh);
+	temp.payload = temp_payload;
 	temp.Interface_ID = interface_ID;
 	m_Ip_Queue.push(temp);
+}
+
+unsigned char* ipLayer::IpAddr2HexInt(CString Ip_address)
+{
+	CString TempToken; // MAC 주소의 각 부분을 저장할 변수 설정
+	unsigned char* ether = (unsigned char*)malloc(sizeof(unsigned char) * 4);
+
+	// MAC 주소를 ':' 로 구분하여 16진수 변환
+	for (int i = 0; i < 4; i++) {
+		if (AfxExtractSubString(TempToken, Ip_address, i, '.')) {
+			ether[i] = (unsigned char)strtoul(TempToken.GetString(), NULL, 10);
+		}
+		else {
+			AfxMessageBox(_T("주소를 설정 오류발생",
+				"경고"),
+				MB_OK | MB_ICONSTOP);
+			free(ether);
+			return nullptr;
+			// 주소 설정 시 오류가 발생하면 오류 메세지 출력하고 할당된 메모리 해제 및 NULL 반환
+		}
+	}
+	ether[4] = '\0';  // 종료 문자 추가 '\0'
+
+	return ether;	// 변환된 MAC 주소 반환
 }

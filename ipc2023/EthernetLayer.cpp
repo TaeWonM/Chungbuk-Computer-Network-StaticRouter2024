@@ -100,7 +100,7 @@ BOOL CEthernetLayer::Receive(unsigned char* ppayload, int Interface_ID)
 		// ������ ������ Ÿ�Ե鿡 ���ؼ��� ����
 	if ((memcmp(pFrame->enet_dstaddr, m_sHeader[Interface_ID].enet_srcaddr, 6) == 0 ||
 		(memcmp(pFrame->enet_dstaddr, BROADCASTING_ADDR, 6) == 0 && memcmp(pFrame->enet_srcaddr, m_sHeader[Interface_ID].enet_srcaddr, 6) != 0)) &&
-		(ntohs(pFrame->enet_type) == 0x0806 || ntohs(pFrame->enet_type) == 0x2081))
+		(ntohs(pFrame->enet_type) == 0x0806 || ntohs(pFrame->enet_type) == 0x0800))
 	{
 		if (memcmp(pFrame->enet_dstaddr, BROADCASTING_ADDR, 6) == 0) is_Broadcast = true;
 
