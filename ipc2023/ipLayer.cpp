@@ -29,7 +29,7 @@ BOOL ipLayer::Send(unsigned char* ppayload, int nlength, int interface_ID)
 {	
 	CString unIpAddr;
 	unIpAddr.Format("%d.%d.%d.%d", ppayload[0], ppayload[1], ppayload[2], ppayload[3]);
-	if (!m_IpMap.empty() && m_IpMap.find(unIpAddr) != m_IpMap.end()) return TRUE;
+	if (!m_IpMap.empty() && m_IpMap.find(unIpAddr) != m_IpMap.end()) return mp_UnderLayer[0]->Send(ppayload, 4, interface_ID);
 	else {
 		m_IpMap.insert({unIpAddr, nullString});
 		return mp_UnderLayer[0]->Send(ppayload, 4, interface_ID);
@@ -56,16 +56,36 @@ BOOL ipLayer::Receive(unsigned char* ppayload, BOOL is_in, int interface_ID)
 	else {
 		if (!m_IpMap.empty() && m_IpMap.find(DstIpAddrStr) != m_IpMap.end()) {
 			m_IpMap[DstIpAddrStr] = DstMacAddrStr;
+			if (!m_Ip_Queue.empty()) {
+				int num = m_Ip_Queue.size();
+				IP_QUEUE temp;
+				for (int i = 0; i < num; i++) {
+					temp = m_Ip_Queue.front();
+					m_Ip_Queue.pop();
+					if (memcmp(temp.DstAddr, DstIpAddr, 4) == 0) {
+						P_IP_HEADER payload = (P_IP_HEADER)temp.payload;
+						mp_UnderLayer[1]->SetMacDstAddress(DstIpAddr, temp.Interface_ID);
+						mp_UnderLayer[1]->Send(temp.payload, ntohs(payload->TotalLengh), 2, temp.Interface_ID);
+						continue;
+					}
+					m_Ip_Queue.push(temp);
+				}
+			}
 			return mp_aUpperLayer[0]->Receive(DstIpAddrStr, DstMacAddrStr, TRUE, interface_ID);
 		}
 		if (!m_Ip_Queue.empty()) {
+			int num = m_Ip_Queue.size();
 			IP_QUEUE temp;
-			temp = m_Ip_Queue.front();
-			if (memcmp(temp.DstAddr, DstIpAddr, 4) == 0) {
+			for (int i = 0; i < num; i++) {
+				temp = m_Ip_Queue.front();
 				m_Ip_Queue.pop();
-				P_IP_HEADER payload = (P_IP_HEADER)temp.payload;
-				mp_UnderLayer[1]->SetMacDstAddress(DstIpAddr,temp.Interface_ID);
-				mp_UnderLayer[1]->Send(ppayload, payload->TotalLengh, temp.Interface_ID);
+				if (memcmp(temp.DstAddr, DstIpAddr, 4) == 0) {
+					P_IP_HEADER payload = (P_IP_HEADER)temp.payload;
+					mp_UnderLayer[1]->SetMacDstAddress(DstIpAddr, temp.Interface_ID);
+					mp_UnderLayer[1]->Send(temp.payload, ntohs(payload->TotalLengh), 2, temp.Interface_ID);
+					continue;
+				}
+				m_Ip_Queue.push(temp);
 			}
 		}
 		m_IpMap.insert({ DstIpAddrStr , DstMacAddrStr });
@@ -93,7 +113,7 @@ BOOL ipLayer::Receive(unsigned char* ppayload, int interface_ID)
 		return FALSE;
 	}
 	// 이때부터 라우팅 테이블에 존재한다고 가정..
-	unsigned char* DstIpAddr;
+	unsigned char* DstIpAddr = NULL;
 	//Flag에 따라 움직이는 법이 달라짐..
 	if (m_IP_Routing_Table[index].m_Flag == "U") {
 		//일단 Map의 String 형태로... 변환.
@@ -106,8 +126,7 @@ BOOL ipLayer::Receive(unsigned char* ppayload, int interface_ID)
 				//존재하니까, 이 값들을 IP에서 바로 Ethernet으로.. 
 				DstIpAddr = MacAddr2HexInt(m_IpMap[DstIpAddrStr]);
 				mp_UnderLayer[1]->SetMacDstAddress(DstIpAddr, m_IP_Routing_Table[index].m_interfaceID);
-				mp_UnderLayer[1]->Send(ppayload, payload->TotalLengh, m_IP_Routing_Table[index].m_interfaceID);
-				free(DstIpAddr);
+				mp_UnderLayer[1]->Send(ppayload, ntohs(payload->TotalLengh),2, m_IP_Routing_Table[index].m_interfaceID);
 				return TRUE;
 			}
 			else {
@@ -134,10 +153,8 @@ BOOL ipLayer::Receive(unsigned char* ppayload, int interface_ID)
 		if (!m_IpMap.empty() && m_IpMap.find(DstIpAddrStr) != m_IpMap.end()) {
 			if (m_IpMap[DstIpAddrStr] != nullString) {
 				//중요하게 달라진 부분은 밑 부분.. Gateway의 Ip Address를 넣고 있다.
-				DstIpAddr = MacAddr2HexInt(m_IpMap[DstIpAddrStr]);
 				mp_UnderLayer[1]->SetMacDstAddress(DstIpAddr, m_IP_Routing_Table[index].m_interfaceID);
-				mp_UnderLayer[1]->Send(ppayload, payload->TotalLengh, m_IP_Routing_Table[index].m_interfaceID);
-				free(DstIpAddr);
+				mp_UnderLayer[1]->Send(ppayload, ntohs(payload->TotalLengh),2, m_IP_Routing_Table[index].m_interfaceID);
 				return TRUE;
 			}
 			else {

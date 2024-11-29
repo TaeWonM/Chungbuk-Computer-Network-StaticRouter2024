@@ -60,7 +60,7 @@ void ArpLayer::ResetHeader()
 
 BOOL ArpLayer::Send(unsigned char* DstIpAddress, int nlength, int interface_ID)
 {
-	memcpy(m_sHeader[interface_ID].sender_ethernet_address, m_macAddr, ETHER_ADDRESS_SIZE);
+	memcpy(m_sHeader[interface_ID].sender_ethernet_address, m_macAddr[interface_ID], ETHER_ADDRESS_SIZE);
 	memcpy(m_sHeader[interface_ID].sender_IP_address, m_ipAddr[interface_ID], IP_ADDRESS_SIZE);
 	memcpy(m_sHeader[interface_ID].target_IP_address, DstIpAddress, nlength);
 	memset(m_sHeader[interface_ID].target_ethernet_address, 255, ETHER_ADDRESS_SIZE);
