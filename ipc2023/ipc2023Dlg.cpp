@@ -386,9 +386,7 @@ void Cipc2023Dlg::SetDlgState(int state)
 		/////////////////////////////////////////////
 		// NI레이어의 Set_is_set true 로 설정 (추가됨)
 		if (!m_NILayer->Receive(m_Combobox1.GetCurSel())) SetDlgState(IPC_ADDR_RESET);
-		m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox1.GetCurSel()), m_Combobox1.GetCurSel());
 		if (!m_NILayer->Receive(m_Combobox2.GetCurSel())) SetDlgState(IPC_ADDR_RESET);
-		m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox2.GetCurSel()), m_Combobox2.GetCurSel());
 		// NI레이어의 receive가 false인 경우 SetDlgState(IPC_ADDR_RESET)을 진행
 		// 여기서 삭제 버튼 활성화, 상대 주소 입력되게 하기
 		pitemDeleteButton->EnableWindow(TRUE);
@@ -478,6 +476,8 @@ void Cipc2023Dlg::OnBnClickedButtonAddr()
 		m_SrcIp2.GetAddress(IpAddress2[0], IpAddress2[1], IpAddress2[2], IpAddress2[3]);
 		m_Arp->Set_Sender_Address(SrcAddr, IpAddress1, m_Combobox1.GetCurSel());
 		m_Arp->Set_Sender_Address(SrcAddr2, IpAddress2, m_Combobox2.GetCurSel());
+		m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox1.GetCurSel()), m_Combobox1.GetCurSel());
+		m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox2.GetCurSel()), m_Combobox2.GetCurSel());
 		// 이더넷 레이어에서 선언한 SetSourceAddress 함수를 가져와 사용하고 있음
 		// dlg 헤더 파일을 보면 m_EthernetLayer가 CEthernetLayer* 즉 포인터임을
 		// 확인 가능함
