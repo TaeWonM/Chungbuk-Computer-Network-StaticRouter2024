@@ -93,6 +93,31 @@ void CNILayer::SetAdpterDeivce() {
 	for (d = alldevs; d; d = d->next) {
 		m_AdapterList[m_Maxadapter] = d;
 		m_adapterIndex[m_Maxadapter]->adapter_num = m_Maxadapter;
+		bpf_u_int32 net, mask;	// 네트워크 주소와 마스크 주소 담을 변수 설정
+		char errbuf[101];	// 오류 메세지 담을 버퍼 설정
+		PPACKET_OID_DATA OidData;	// OID 데이터 담을 포인터 설정
+		LPADAPTER adapter = NULL;	// 어뎁터 포인터 설정
+
+		// OID 구조체 메모리 설정(추가됨)
+		OidData = (PPACKET_OID_DATA)malloc(6 + sizeof(PPACKET_OID_DATA));
+		OidData->Oid = OID_802_3_CURRENT_ADDRESS;	// OID 설정
+		OidData->Length = 6;	// OID 크기 길이 설정
+
+
+		int i = 0;
+		if (pcap_lookupnet(d->name, &net, &mask, errbuf) < 0) {
+			return;
+			printf("error");
+		} // 현재 선택한 어뎁터의 네트워크 주소와 마스크 주소 조회
+		adapter = PacketOpenAdapter(d->name);
+		/////////////////// getter함수들로 변경됨 직접 참조 막아서 그럼////////////
+		if (!adapter || adapter->hFile == INVALID_HANDLE_VALUE) {
+			return;
+		}
+		// 어뎁터 열기 실패하면 함수 종료
+
+		PacketRequest(adapter, FALSE, OidData);// MAC 주소 가져오기
+		memcpy(MacAddress[m_Maxadapter], OidData->Data, ETHER_ADDRESS_SIZE);
 		m_Maxadapter++;
 	}
 }
@@ -117,4 +142,8 @@ int CNILayer::GetAdapterIndex(int index) {
 }
 void CNILayer::SetAdapterIndex(int value, int index) {
 	m_adapterIndex[index]->adapter_num = value;
+}
+
+unsigned char* CNILayer::GetMacAddressIndex(int index) {
+	return MacAddress[index];
 }

@@ -124,6 +124,7 @@ public:
 	/*BOOL upperLayerKillTimer(int num);
 	BOOL upperLayerSetTimer(int num);
 	afx_msg void OnBnClickedButton2();*/
+	void SetEthernetLayer();
 	void InitListControlSet();
 	void InitProxyListControlSet();
 	void InitRoutingListControlSet();

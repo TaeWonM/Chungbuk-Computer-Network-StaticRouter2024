@@ -40,7 +40,10 @@ public:
 	void SetAdapterIndex(int value, int index);
 	CNILayer(char* pName);
 	static UINT ReceiveThread(LPVOID pParam);
-	CWinThread * m_pThread = NULL;
+	CWinThread* m_pThread;
+	unsigned char MacAddress[ADAPTER_MAX_SIZE][ETHER_ADDRESS_SIZE];
+	unsigned char *GetMacAddressIndex(int index);
+	
 	virtual ~CNILayer();
 
 	typedef struct ThreadStruct

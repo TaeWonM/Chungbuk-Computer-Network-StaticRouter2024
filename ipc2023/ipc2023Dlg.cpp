@@ -198,6 +198,7 @@ BOOL Cipc2023Dlg::OnInitDialog()
 	m_NILayer->SetAdpterDeivce();
 	m_EthernetLayer->SetBroadcasting_address();
 	SetComboboxlist();
+	SetEthernetLayer();
 	InitListControlSet();
 	InitProxyListControlSet();
 	InitRoutingListControlSet();
@@ -385,7 +386,9 @@ void Cipc2023Dlg::SetDlgState(int state)
 		/////////////////////////////////////////////
 		// NI레이어의 Set_is_set true 로 설정 (추가됨)
 		if (!m_NILayer->Receive(m_Combobox1.GetCurSel())) SetDlgState(IPC_ADDR_RESET);
+		m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox1.GetCurSel()), m_Combobox1.GetCurSel());
 		if (!m_NILayer->Receive(m_Combobox2.GetCurSel())) SetDlgState(IPC_ADDR_RESET);
+		m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox2.GetCurSel()), m_Combobox2.GetCurSel());
 		// NI레이어의 receive가 false인 경우 SetDlgState(IPC_ADDR_RESET)을 진행
 		// 여기서 삭제 버튼 활성화, 상대 주소 입력되게 하기
 		pitemDeleteButton->EnableWindow(TRUE);
@@ -501,79 +504,31 @@ void Cipc2023Dlg::OnBnClickedButtonAddr()
 ///아래는 전부 추가된 부분//////////
 void Cipc2023Dlg::OnCbnSelchangeCombo1()
 {
-	bpf_u_int32 net, mask;	// 네트워크 주소와 마스크 주소 담을 변수 설정
-	char errbuf[101];	// 오류 메세지 담을 버퍼 설정
-	PPACKET_OID_DATA OidData;	// OID 데이터 담을 포인터 설정
-	LPADAPTER adapter = NULL;	// 어뎁터 포인터 설정
+	unsigned char* OidData;
+	OidData = m_NILayer->GetMacAddressIndex(m_Combobox1.GetCurSel());
 
-	// OID 구조체 메모리 설정(추가됨)
-	OidData = (PPACKET_OID_DATA)malloc(6 + sizeof(PPACKET_OID_DATA));
-	OidData->Oid = OID_802_3_CURRENT_ADDRESS;	// OID 설정
-	OidData->Length = 6;	// OID 크기 길이 설정
-
-
-	int i = 0;
-	int indexnum = m_Combobox1.GetCurSel();
-	m_NILayer->SetAdapterIndex(indexnum, 0);	// 현재 어뎁터의 인덱스 설정
-	if (pcap_lookupnet(m_NILayer->GetAdapter(indexnum)->name, &net, &mask, errbuf) < 0) {
-		return;
-		printf("error");
-	} // 현재 선택한 어뎁터의 네트워크 주소와 마스크 주소 조회
-	adapter = PacketOpenAdapter(m_NILayer->GetAdapter(indexnum)->name);
-	/////////////////// getter함수들로 변경됨 직접 참조 막아서 그럼////////////
-	if (!adapter || adapter->hFile == INVALID_HANDLE_VALUE) {
-		return;
-	}
-	// 어뎁터 열기 실패하면 함수 종료
-
-	PacketRequest(adapter, FALSE, OidData);// MAC 주소 가져오기
 
 	// MAC 주소를 문자열로 포멧
 	CString Address_mssage = "";
 	Address_mssage.Format(_T("%02x:%02x:%02x:%02x:%02x:%02x"),
-		OidData->Data[0], OidData->Data[1], OidData->Data[2],
-		OidData->Data[3], OidData->Data[4], OidData->Data[5]);
+		OidData[0], OidData[1], OidData[2],
+		OidData[3], OidData[4], OidData[5]);
 	SetDlgItemText(IDC_EDIT_SRC, Address_mssage); // 포멧된 MAC주소를 송신자 주소로 설정
-	PacketCloseAdapter(adapter); // 어뎁터 닫기
 }
 
 
 void Cipc2023Dlg::OnCbnSelchangeCombo2()
 {
-	bpf_u_int32 net, mask;	// 네트워크 주소와 마스크 주소 담을 변수 설정
-	char errbuf[101];	// 오류 메세지 담을 버퍼 설정
-	PPACKET_OID_DATA OidData;	// OID 데이터 담을 포인터 설정
-	LPADAPTER adapter = NULL;	// 어뎁터 포인터 설정
+	unsigned char* OidData;
+	OidData = m_NILayer->GetMacAddressIndex(m_Combobox2.GetCurSel());
 
-	// OID 구조체 메모리 설정(추가됨)
-	OidData = (PPACKET_OID_DATA)malloc(6 + sizeof(PPACKET_OID_DATA));
-	OidData->Oid = OID_802_3_CURRENT_ADDRESS;	// OID 설정
-	OidData->Length = 6;	// OID 크기 길이 설정
-
-
-	int i = 0;
-	int indexnum = m_Combobox2.GetCurSel();
-	m_NILayer->SetAdapterIndex(indexnum, 1);	// 현재 어뎁터의 인덱스 설정
-	if (pcap_lookupnet(m_NILayer->GetAdapter(indexnum)->name, &net, &mask, errbuf) < 0) {
-		return;
-		printf("error");
-	} // 현재 선택한 어뎁터의 네트워크 주소와 마스크 주소 조회
-	adapter = PacketOpenAdapter(m_NILayer->GetAdapter(indexnum)->name);
-	/////////////////// getter함수들로 변경됨 직접 참조 막아서 그럼////////////
-	if (!adapter || adapter->hFile == INVALID_HANDLE_VALUE) {
-		return;
-	}
-	// 어뎁터 열기 실패하면 함수 종료
-
-	PacketRequest(adapter, FALSE, OidData);// MAC 주소 가져오기
 
 	// MAC 주소를 문자열로 포멧
 	CString Address_mssage = "";
 	Address_mssage.Format(_T("%02x:%02x:%02x:%02x:%02x:%02x"),
-		OidData->Data[0], OidData->Data[1], OidData->Data[2],
-		OidData->Data[3], OidData->Data[4], OidData->Data[5]);
+		OidData[0], OidData[1], OidData[2],
+		OidData[3], OidData[4], OidData[5]);
 	SetDlgItemText(IDC_EDIT_SRC3, Address_mssage); // 포멧된 MAC주소를 송신자 주소로 설정
-	PacketCloseAdapter(adapter); // 어뎁터 닫기
 }
 
 
@@ -754,7 +709,12 @@ BOOL Cipc2023Dlg::UpdateArpCahe(unsigned char* ipAddr, unsigned char* macAddr) {
 	return FALSE;
 }
 
-
+void Cipc2023Dlg::SetEthernetLayer() {
+	int max_num = m_NILayer->GetMaxAdapterIndex();
+	for (int i = 0; i < max_num; i++) {
+		m_EthernetLayer->SetMacSrcAddress(m_NILayer->GetMacAddressIndex(i), i);
+	}
+}
 
 void Cipc2023Dlg::OnBnClickedIpRoutingTableItemAddBtn()
 {

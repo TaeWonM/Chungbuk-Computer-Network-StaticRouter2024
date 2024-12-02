@@ -41,6 +41,7 @@ void Cipc2024Sub2Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_IP_ROUTER_CHECK_UP, m_Check_Up);
 	DDX_Control(pDX, IDC_IP_ROUTER_CHECK_HOST, m_Check_Host);
 	DDX_Control(pDX, IDC_IP_ROUTER_CHECK_GATEWAY, m_Check_GateWay);
+	DDX_Control(pDX, IDC_IP_ROUTING_METRIC, m_unMetric);
 }
 
 
@@ -58,40 +59,16 @@ END_MESSAGE_MAP()
 
 void Cipc2024Sub2Dlg::OnCbnSelchangeCombo()
 {
-	bpf_u_int32 net, mask;	// 네트워크 주소와 마스크 주소 담을 변수 설정
-	char errbuf[101];	// 오류 메세지 담을 버퍼 설정
-	PPACKET_OID_DATA OidData;	// OID 데이터 담을 포인터 설정
-	LPADAPTER adapter = NULL;	// 어뎁터 포인터 설정
+	unsigned char* OidData;
+	OidData = parent->m_NILayer->GetMacAddressIndex(m_Combobox.GetCurSel());
 
-	// OID 구조체 메모리 설정(추가됨)
-	OidData = (PPACKET_OID_DATA)malloc(6 + sizeof(PPACKET_OID_DATA));
-	OidData->Oid = OID_802_3_CURRENT_ADDRESS;	// OID 설정
-	OidData->Length = 6;	// OID 크기 길이 설정
-
-
-	int i = 0;
-	int indexnum = m_Combobox.GetCurSel();	// 콤보 박스에서 선택한 네트워크 장치의 인덱스 가져오기
-	//오늘 변경된 부분///////////////////////////////////////////////////////
-	if (pcap_lookupnet(parent->m_NILayer->GetAdapter(indexnum)->name, &net, &mask, errbuf) < 0) {
-		return;
-		printf("error");
-	} // 현재 선택한 어뎁터의 네트워크 주소와 마스크 주소 조회
-	adapter = PacketOpenAdapter(parent->m_NILayer->GetAdapter(indexnum)->name);
-	/////////////////// getter함수들로 변경됨 직접 참조 막아서 그럼////////////
-	if (!adapter || adapter->hFile == INVALID_HANDLE_VALUE) {
-		return;
-	}
-	// 어뎁터 열기 실패하면 함수 종료
-
-	PacketRequest(adapter, FALSE, OidData);// MAC 주소 가져오기
 
 	// MAC 주소를 문자열로 포멧
 	CString Address_mssage = "";
 	Address_mssage.Format(_T("%02x:%02x:%02x:%02x:%02x:%02x"),
-		OidData->Data[0], OidData->Data[1], OidData->Data[2],
-		OidData->Data[3], OidData->Data[4], OidData->Data[5]);
+		OidData[0], OidData[1], OidData[2],
+		OidData[3], OidData[4], OidData[5]);
 	SetDlgItemText(IDC_IP_ROUTER_EDIT, Address_mssage); // 포멧된 MAC주소를 송신자 주소로 설정
-	PacketCloseAdapter(adapter); // 어뎁터 닫기
 }
 
 
@@ -147,7 +124,7 @@ void Cipc2024Sub2Dlg::OnOK()
 	DstIpAddrStr.Format(_T("%d.%d.%d.%d"), unDst_Ip_Address[0], unDst_Ip_Address[1], unDst_Ip_Address[2], unDst_Ip_Address[3]);
 	NetMaskStr.Format(_T("%d.%d.%d.%d"), unNetMask[0], unNetMask[1], unNetMask[2], unNetMask[3]);
 	GateWayStr.Format(_T("%d.%d.%d.%d"), unGetWay[0], unGetWay[1], unGetWay[2], unGetWay[3]);
-	CString UFlag = _T("U"), HFlag = _T("H"), GFlag = _T("G");
+	CString UFlag = _T("U"), HFlag = _T("H"), GFlag = _T("G"), Metric;
 	FlagStr = _T("");
 	if (m_Check_Up.GetCheck()) FlagStr += UFlag;
 	if (m_Check_GateWay.GetCheck()) FlagStr += GFlag;
@@ -156,13 +133,14 @@ void Cipc2024Sub2Dlg::OnOK()
 	parent->m_Ip->AddRoutingTable(unDst_Ip_Address, unNetMask, unGetWay, FlagStr, m_Combobox.GetCurSel());
 	deviceID.Format(_T("%d"), m_Combobox.GetCurSel());
 	int ItemIndex = parent->m_RoutingListControl.GetItemCount();
+	m_unMetric.GetWindowTextA(Metric);
 	parent->m_RoutingListControl.InsertItem(ItemIndex, "");
 	parent->m_RoutingListControl.SetItemText(ItemIndex, IP_ROUTING_LIST_CONTROL_INTERFACE, deviceID);
 	parent->m_RoutingListControl.SetItemText(ItemIndex, IP_ROUTING_LIST_CONTROL_DST_IP, DstIpAddrStr);
 	parent->m_RoutingListControl.SetItemText(ItemIndex, IP_ROUTING_LIST_CONTROL_GATEWAY, GateWayStr);
 	parent->m_RoutingListControl.SetItemText(ItemIndex, IP_ROUTING_LIST_CONTROL_NET_MASK, NetMaskStr);
 	parent->m_RoutingListControl.SetItemText(ItemIndex, IP_ROUTING_LIST_CONTROL_FLAG, FlagStr);
-	parent->m_RoutingListControl.SetItemText(ItemIndex, IP_ROUTING_LIST_CONTROL_METIRX, _T("0"));
+	parent->m_RoutingListControl.SetItemText(ItemIndex, IP_ROUTING_LIST_CONTROL_METIRX, Metric);
 	CDialogEx::OnOK();
 	PostNcDestroy();
 }

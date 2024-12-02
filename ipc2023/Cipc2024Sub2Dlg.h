@@ -34,6 +34,7 @@ private:
 	CButton m_Check_Host;
 public:
 	CEdit m_unMacAddr;
+	CEdit m_unMetric;
 	afx_msg void OnCbnSelchangeCombo();
 	afx_msg void OnClose();
 	virtual void PostNcDestroy();

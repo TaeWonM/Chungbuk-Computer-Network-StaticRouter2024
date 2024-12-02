@@ -39,6 +39,8 @@
 #define IDC_PROXY_ITEM_ADD_BTN          1023
 #define IDC_IP_ROUTER_COMBO_INTERFACE   1023
 #define IDC_IP_ROUTING_TABLE_ITEM_ADD_BTN 1024
+#define IDC_ROUTING                     1024
+#define IDC_IP_ROUTING_METRIC           1024
 
 // Next default values for new objects
 // 
@@ -46,7 +48,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1024
+#define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
