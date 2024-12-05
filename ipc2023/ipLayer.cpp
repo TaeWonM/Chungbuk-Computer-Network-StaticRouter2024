@@ -16,6 +16,7 @@ ipLayer::ipLayer(char* pName)
 {
 	ResetHeader();
 	initRoutingTable();
+	initIcmpunreachable();
 }
 
 ipLayer::~ipLayer()
@@ -107,6 +108,17 @@ BOOL ipLayer::Receive(unsigned char* ppayload, int interface_ID)
 		if (i == IP_ADDRESS_SIZE) {
 			break;
 		}
+	}
+	if (m_IP_Routing_Table[index].m_Metric > payload->ToTimeLive) {
+
+		memcpy(payload->data, &ICMP_UnReachable_HEADER, ICMP_HEADER_SIZE);
+		payload->TotalLengh = htons(IP_HEADER_SIZE + ICMP_HEADER_SIZE);
+		unsigned char temp[6];
+		memcpy(temp, payload->source_IP_address, IP_ADDRESS_SIZE);
+		memcpy(payload->source_IP_address, payload->target_IP_address, IP_ADDRESS_SIZE);
+		memcpy(payload->target_IP_address, temp, IP_ADDRESS_SIZE);
+
+		return Receive(ppayload, interface_ID);
 	}
 	if (index == m_Routing_Table_Max_Index) {
 		AfxMessageBox(_T("Nothing Mached"));
@@ -224,12 +236,13 @@ void ipLayer::initRoutingTable() {
 	m_Routing_Table_Max_Index = 0;
 }
 
-void ipLayer::AddRoutingTable(unsigned char* Destination, unsigned char* Netmask, unsigned char* Gateway, CString Flag, int interface_ID) {
+void ipLayer::AddRoutingTable(unsigned char* Destination, unsigned char* Netmask, unsigned char* Gateway, CString Flag, int interface_ID, int metric) {
 	memcpy(m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Destination, Destination, IP_ADDRESS_SIZE);
 	memcpy(m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Netmask, Netmask, IP_ADDRESS_SIZE);
 	memcpy(m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Gateway, Gateway, IP_ADDRESS_SIZE);
 	m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Flag = Flag;
 	m_IP_Routing_Table[m_Routing_Table_Max_Index].m_interfaceID = interface_ID;
+	m_IP_Routing_Table[m_Routing_Table_Max_Index].m_Metric = metric;
 	m_Routing_Table_Max_Index++;
 }
 
@@ -292,4 +305,11 @@ unsigned char* ipLayer::IpAddr2HexInt(CString Ip_address)
 	ether[4] = '\0';  // 종료 문자 추가 '\0'
 
 	return ether;	// 변환된 MAC 주소 반환
+}
+
+void ipLayer::initIcmpunreachable() {
+	ICMP_UnReachable_HEADER.Type = 3;
+	ICMP_UnReachable_HEADER.Code = 0;
+	memset(ICMP_UnReachable_HEADER.Rest_of_Header, 0, sizeof(unsigned char) * 4);
+	ICMP_UnReachable_HEADER.Checksum = htons(0xffff - 0x0300);
 }

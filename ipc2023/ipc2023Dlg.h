@@ -78,7 +78,6 @@ private:
 
 	void			SetDlgState(int state);
 	inline void		EndofProcess();
-	BOOL			m_bSendReady;
 	UINT_PTR		TimerHandler;
 
 	// Implementation
@@ -92,7 +91,7 @@ public:
 	ArpLayer* m_Arp;	// 추가함
 	unsigned char* MacAddr2HexInt(CString Mac_address);
 	unsigned char* IpAddr2HexInt(CString Ip_address);
-	afx_msg void OnBnClickedButtonAddr();
+	afx_msg void OnBnClickedSetButtonAddr();
 	////////원본과 다름//////////
 	CString m_unSrcAddr;
 	CString m_unSrcAddr2;
@@ -109,6 +108,8 @@ public:
 	CIPAddressCtrl m_SrcIp2;
 	Cipc2023SubDlg * ProxyDlg;
 	Cipc2024Sub2Dlg * IpRoutingDlg;
+	CButton m_setBtn;
+	CButton m_unsetBtn;
 	int timerIndex[101];
 	int timerMaxIndex = 0;
 	afx_msg void OnCbnSelchangeCombo1();
@@ -137,4 +138,5 @@ public:
 	afx_msg void OnBnClickedProxyItemAddBtn();
 	afx_msg void OnCbnSelchangeCombo2();
 	afx_msg void OnBnClickedIpRoutingTableItemAddBtn();
+	afx_msg void OnBnClickedUnSetButtonAddr();
 };

@@ -38,8 +38,9 @@ public:
 	void			initRoutingTable();
 	unsigned char*	MacAddr2HexInt(CString Mac_address);
 	unsigned char*	IpAddr2HexInt(CString Ip_address);
-	void			AddRoutingTable(unsigned char * Destination, unsigned char* Netmask, unsigned char* Gateway, CString Flag, int interface_ID);
+	void			AddRoutingTable(unsigned char * Destination, unsigned char* Netmask, unsigned char* Gateway, CString Flag, int interface_ID, int metric);
 	void			AddQueue(unsigned char* DstIPAddr, unsigned char* ppayload, int interface_ID);
+	void			initIcmpunreachable();
 	ipLayer(char* pName);
 
 	typedef struct _IP_HEADER {
@@ -64,6 +65,7 @@ public:
 		unsigned char m_Gateway[4];
 		CString m_Flag;
 		int m_interfaceID;
+		int m_Metric;
 	} IP_ROUTING_TABLE, * P_IP_ROUTING_TABLE;
 	IP_ROUTING_TABLE m_IP_Routing_Table[IP_ROUTING_TABLE_MAX_SIZE];
 
@@ -75,6 +77,15 @@ public:
 	} IP_QUEUE, * P_IP_QUEUE;
 	std::queue<IP_QUEUE> m_Ip_Queue;
 	int IP_Queue_Header = 0;
+
+	typedef struct _ICMP_HEADER {
+		unsigned char Type;
+		unsigned char Code;
+		unsigned short Checksum;
+		unsigned char Rest_of_Header[4];
+	} ICMP_HEADER;
+	ICMP_HEADER ICMP_UnReachable_HEADER;
+
 	virtual ~ipLayer();
 };
 

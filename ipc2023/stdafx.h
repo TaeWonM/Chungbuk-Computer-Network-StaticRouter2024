@@ -48,6 +48,8 @@
 #define ADAPTER_MAX_SIZE			7
 #define IP_ROUTING_TABLE_MAX_SIZE	20
 #define IP_QUEUE_SIZE				10
+#define ICMP_HEADER_SIZE			8
+#define IP_HEADER_SIZE				20
 
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

@@ -71,7 +71,6 @@ Cipc2023Dlg::Cipc2023Dlg(CWnd* pParent /*=nullptr*/)
 	// 부모 클래스의 생성자 호출 및 대화 상자 ID 설정
 	, CBaseLayer("ChatDlg")
 	// CBaseLayer 의 생성자 호출 후 ChatDlg라는 이름으로 초기화
-	, m_bSendReady(FALSE)
 	// 전송 준비 상태 표현 변수를 bool값 FALSE로 초기화
 	, m_nAckReady(-1)
 	// ACK 준비 상태 표현 변수를 -1로 초기화
@@ -129,6 +128,8 @@ void Cipc2023Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO2, m_Combobox2);
 	DDX_Control(pDX, IDC_SRC_IP, m_SrcIp1);
 	DDX_Control(pDX, IDC_COMBO1, m_Combobox1);
+	DDX_Control(pDX, IDC_BUTTON_ADDR, m_setBtn);
+	DDX_Control(pDX, IDC_BUTTON_UNADDR, m_unsetBtn);
 	// 현재 장치의 네트워크 장치를 보여줄 콤보박스 추가함
 	// 여러 네트워크 장치를 보여주기 위해 콤보박스 채용
 }
@@ -139,7 +140,8 @@ BEGIN_MESSAGE_MAP(Cipc2023Dlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_BUTTON_ADDR, &Cipc2023Dlg::OnBnClickedButtonAddr)
+	ON_BN_CLICKED(IDC_BUTTON_ADDR, &Cipc2023Dlg::OnBnClickedSetButtonAddr)
+	ON_BN_CLICKED(IDC_BUTTON_ADDR, &Cipc2023Dlg::OnBnClickedUnSetButtonAddr)
 	// 메세지 전송 버튼 클릭 처리기 등록
 	ON_WM_TIMER() // 메세지 타이머 처리기 등록
 
@@ -375,7 +377,8 @@ void Cipc2023Dlg::SetDlgState(int state)
 		// 브로드캐스트와 유니캐스트에 대한 작동 방식 변경됨(삭제)
 		// 다른곳에서 처리해서 여기서 제거
 	case IPC_ADDR_SET: // 주소 설정 상태
-		pSetAddrButton->SetWindowText(_T("재설정(&R)"));
+		m_setBtn.EnableWindow(FALSE);
+		m_unsetBtn.EnableWindow(TRUE);
 		//pChkButton->EnableWindow(FALSE)
 		m_Combobox1.EnableWindow(FALSE);
 		m_Combobox2.EnableWindow(FALSE);
@@ -392,7 +395,8 @@ void Cipc2023Dlg::SetDlgState(int state)
 		pitemDeleteButton->EnableWindow(TRUE);
 		break;
 	case IPC_ADDR_RESET: // 주소 재설정 상태
-		pSetAddrButton->SetWindowText(_T("설정(&O)"));
+		m_unsetBtn.EnableWindow(TRUE);
+		m_unsetBtn.EnableWindow(FALSE);
 		m_Combobox1.EnableWindow(TRUE);
 		m_Combobox2.EnableWindow(TRUE);
 		// 네트워크 장치 콤보박스에 다시 접근할 수 있도록 설정
@@ -441,7 +445,7 @@ void Cipc2023Dlg::OnTimer(UINT nIDEvent)
 // 타이머가 시간이 끝나면 ListDlg에 타임아웃 메시지를 띄웁니다.
 // 동시에 타이머를 죽이고, m_nAckReady를 -1로 설정하여서 Recive부분의 if문에 걸려 확인하는 부분입니다.
 
-void Cipc2023Dlg::OnBnClickedButtonAddr()
+void Cipc2023Dlg::OnBnClickedSetButtonAddr()
 {
 	UpdateData(TRUE);
 
@@ -454,42 +458,32 @@ void Cipc2023Dlg::OnBnClickedButtonAddr()
 
 		return;
 	}
-	// 전송 준비 확인
-	if (m_bSendReady) {
-		SetDlgState(IPC_ADDR_RESET);
-		SetDlgState(IPC_INITIALIZING);
+	////////////////////////////////////추가된 부분///////////////////////////////////
+	unsigned char* SrcAddr = MacAddr2HexInt(m_unSrcAddr);
+	unsigned char* SrcAddr2 = MacAddr2HexInt(m_unSrcAddr2);
+	if (SrcAddr == nullptr) {
+		return;
 	}
-	else {
-		////////////////////////////////////추가된 부분///////////////////////////////////
-		unsigned char* SrcAddr = MacAddr2HexInt(m_unSrcAddr);
-		unsigned char* SrcAddr2 = MacAddr2HexInt(m_unSrcAddr2);
-		if (SrcAddr == nullptr) {
-			return;
-		}
-		// MacAddr2HexInt함수의 소스 주소 또는 목적지 주소가 잘못 설정되어 
-		// nullptr을 반환한 경우 실행을 중단하도록 추가
-		m_EthernetLayer->SetMacSrcAddress(SrcAddr, m_Combobox1.GetCurSel());
-		m_EthernetLayer->SetMacSrcAddress(SrcAddr2, m_Combobox2.GetCurSel());
-		unsigned char IpAddress1[4];
-		unsigned char IpAddress2[4];
-		m_SrcIp1.GetAddress(IpAddress1[0], IpAddress1[1], IpAddress1[2], IpAddress1[3]);
-		m_SrcIp2.GetAddress(IpAddress2[0], IpAddress2[1], IpAddress2[2], IpAddress2[3]);
-		m_Arp->Set_Sender_Address(SrcAddr, IpAddress1, m_Combobox1.GetCurSel());
-		m_Arp->Set_Sender_Address(SrcAddr2, IpAddress2, m_Combobox2.GetCurSel());
-		m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox1.GetCurSel()), m_Combobox1.GetCurSel());
-		m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox2.GetCurSel()), m_Combobox2.GetCurSel());
-		// 이더넷 레이어에서 선언한 SetSourceAddress 함수를 가져와 사용하고 있음
-		// dlg 헤더 파일을 보면 m_EthernetLayer가 CEthernetLayer* 즉 포인터임을
-		// 확인 가능함
-		// MacAddr2HexInt는 여기 아래에 정의된 함수임
-		// 16진수로 맥 주소를 변환하는 함수다
-		/////////////////////////////////////////////////////////////////////////////////
-
+	// MacAddr2HexInt함수의 소스 주소 또는 목적지 주소가 잘못 설정되어 
+	// nullptr을 반환한 경우 실행을 중단하도록 추가
+	m_EthernetLayer->SetMacSrcAddress(SrcAddr, m_Combobox1.GetCurSel());
+	m_EthernetLayer->SetMacSrcAddress(SrcAddr2, m_Combobox2.GetCurSel());
+	unsigned char IpAddress1[4];
+	unsigned char IpAddress2[4];
+	m_SrcIp1.GetAddress(IpAddress1[0], IpAddress1[1], IpAddress1[2], IpAddress1[3]);
+	m_SrcIp2.GetAddress(IpAddress2[0], IpAddress2[1], IpAddress2[2], IpAddress2[3]);
+	m_Arp->Set_Sender_Address(SrcAddr, IpAddress1, m_Combobox1.GetCurSel());
+	m_Arp->Set_Sender_Address(SrcAddr2, IpAddress2, m_Combobox2.GetCurSel());
+	m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox1.GetCurSel()), m_Combobox1.GetCurSel());
+	m_Arp->SendGARP(m_NILayer->GetMacAddressIndex(m_Combobox2.GetCurSel()), m_Combobox2.GetCurSel());
+	// 이더넷 레이어에서 선언한 SetSourceAddress 함수를 가져와 사용하고 있음
+	// dlg 헤더 파일을 보면 m_EthernetLayer가 CEthernetLayer* 즉 포인터임을
+	// 확인 가능함
+	// MacAddr2HexInt는 여기 아래에 정의된 함수임
+	// 16진수로 맥 주소를 변환하는 함수다
+	/////////////////////////////////////////////////////////////////////////////////
 		SetDlgState(IPC_ADDR_SET);
 		SetDlgState(IPC_READYTOSEND);
-	}
-	// MAC 주소를 16진수로 변환하여 송신, 수신 측 주소를 설정하고 설정 준비 상태로 변경
-	m_bSendReady = !m_bSendReady;
 }
 // 주소 설정 버튼를 눌렀을 때 예외 및 설정하는 함수입니다.
 // m_unDstAddr 혹은 m_unSrcAddr가 0이면 오류를 설정합니다.
@@ -500,7 +494,12 @@ void Cipc2023Dlg::OnBnClickedButtonAddr()
 // 체크 박스 상태에 따른 전송 모드 처리. 체크 되어있으면 브로드캐스트, 안되어있으면 유니캐스트로 처리
 // BROADCAST 버튼이 눌렸을 때 SetDlgState을 이용해 IPC_BROADCASTMODE를 설정하거나 IPC_UNICASTMODE을 이용해 IPC_BROADCASTMODE를 해제합니다.
 
+void Cipc2023Dlg::OnBnClickedUnSetButtonAddr()
+{
 
+	SetDlgState(IPC_ADDR_RESET);
+	SetDlgState(IPC_INITIALIZING);
+}
 ///아래는 전부 추가된 부분//////////
 void Cipc2023Dlg::OnCbnSelchangeCombo1()
 {
